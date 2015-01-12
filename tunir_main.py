@@ -4,6 +4,8 @@ import os
 import sys
 import json
 import argparse
+from pprint import pprint
+from testvm import build_and_run
 
 def read_job_configuration(jobname=''):
     """
@@ -27,7 +29,15 @@ def main(args):
     if args.job:
         job_name = args.job
     else:
-        sys.exit(0)
+        sys.exit(-2)
+
+    # First let us read the vm configuration.
+    config = read_job_configuration(job_name)
+    if not config: # Bad config name
+        sys.exit(-1)
+
+    vm = build_and_run(config['image'], config['ram'], graphics=True, vnc=False, atomic=False)
+    job_pid = vm.pid # The pid to kill at the end
 
 
 if __name__ == '__main__':

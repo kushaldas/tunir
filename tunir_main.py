@@ -2,7 +2,8 @@
 
 import os
 import sys
-import jsontu   tt
+import json
+import argparse
 
 def read_job_configuration(jobname=''):
     """
@@ -19,10 +20,18 @@ def read_job_configuration(jobname=''):
     return data
 
 
-def main():
-    "Starting point of the code"
 
+def main(args):
+    "Starting point of the code"
+    job_name = ''
+    if args.job:
+        job_name = args.job
+    else:
+        sys.exit(0)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--job", help="The job configuration name to run")
+    args = parser.parse_args()
+    main(args)

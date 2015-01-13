@@ -1,0 +1,4 @@
+*.ipynb
+*.pyc
+.idea
+*.qcow2

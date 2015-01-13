@@ -1,0 +1,2 @@
+ls -l /
+sudo:: cat /etc/shadow

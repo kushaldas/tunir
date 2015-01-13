@@ -24,3 +24,7 @@ under */tmp* directory.
 
 Write @@ at the start of the line if you know the command will fail. This will count
 that command failure as a success.
+
+## How to run the default job?
+
+$ sudo ./tunir_main.py --job default

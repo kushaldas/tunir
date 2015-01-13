@@ -28,3 +28,8 @@ that command failure as a success.
 ## How to run the default job?
 
 $ sudo ./tunir_main.py --job default
+
+## How to view the result for a job_id?
+
+% ./tunir_main.py --result job_id
+

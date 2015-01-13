@@ -3,9 +3,14 @@
 import os
 import sys
 import json
+import time
+import signal
 import argparse
 from pprint import pprint
 from testvm import build_and_run
+from fabric.api import settings, run, sudo
+from fabric.network import disconnect_all
+
 
 def read_job_configuration(jobname=''):
     """
@@ -21,6 +26,18 @@ def read_job_configuration(jobname=''):
         data = json.load(fobj)
     return data
 
+def run_command(command=''):
+    """
+    Runs the given command using fabric.
+
+    :param command: string command
+    :return: output of the given command
+    """
+    try:
+        with settings(host_string="localhost:2222", user="fedora", password="passw0rd"):
+            print run("free -m")
+    finally:
+        disconnect_all()
 
 
 def main(args):
@@ -38,10 +55,17 @@ def main(args):
 
     vm = build_and_run(config['image'], config['ram'], graphics=True, vnc=False, atomic=False)
     job_pid = vm.pid # The pid to kill at the end
+    # We should wait for a minute here
+    time.sleep(60)
+    run_command()
 
+    # Now let us kill the kvm process
+    os.kill(job_pid, signal.SIGKILL)
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--job", help="The job configuration name to run")
     args = parser.parse_args()
     main(args)
+

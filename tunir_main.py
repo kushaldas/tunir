@@ -10,6 +10,8 @@ from pprint import pprint
 from testvm import build_and_run
 from fabric.api import settings, run, sudo
 from fabric.network import disconnect_all
+from tunirdb import add_job, create_session, add_result, update_job
+from tunirlib.default_config import DB_URL
 
 
 def read_job_configuration(jobname=''):
@@ -26,16 +28,47 @@ def read_job_configuration(jobname=''):
         data = json.load(fobj)
     return data
 
-def run_command(command=''):
+def run_job(job_name='', config=None):
     """
     Runs the given command using fabric.
 
     :param command: string command
     :return: output of the given command
     """
+    if not os.path.exists(job_name + '.txt'):
+        print "Missing job file."
+        return
+
+    # Now read the commands inside the job file
+    # and execute them one by one, we need to save
+    # the result too.
+    session = create_session(DB_URL)
+    commands = []
+    with open(job_name + '.txt') as fobj:
+        commands = fobj.readlines()
+
     try:
-        with settings(host_string="localhost:2222", user="fedora", password="passw0rd"):
-            print run("free -m")
+        status = True
+        job = add_job(session, name=job_name, image=config['image'],
+                      ram=config['ram'], user=config['user'], password=config['password'])
+        for command in commands:
+            command = command.strip('')
+            with settings(host_string="localhost:2222", user="fedora", password="passw0rd",
+                              warn_only=True):
+                result = None
+                if command.startswith('sudo::'): # This is a sudo command
+                    result = sudo(command[6:].strip())
+                else:
+                    result = run(command)
+                add_result(session, job.id, command, unicode(result),
+                           result.return_code)
+                if result.return_code != 0:
+                    # Save the error message and status as fail.
+                    status = False
+                    break
+        # If we are here, that means all commands ran successfully.
+        if status:
+            update_job(session, job)
     finally:
         disconnect_all()
 
@@ -57,11 +90,12 @@ def main(args):
     job_pid = vm.pid # The pid to kill at the end
     # We should wait for a minute here
     time.sleep(60)
-    run_command()
+    try:
+        run_job(job_name, config)
+    finally:
+        # Now let us kill the kvm process
+        os.kill(job_pid, signal.SIGKILL)
 
-    # Now let us kill the kvm process
-    os.kill(job_pid, signal.SIGKILL)
-    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

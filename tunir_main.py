@@ -76,11 +76,13 @@ def run_job(job_name='', config=None):
                     # Save the error message and status as fail.
                     status = False
                     break
+
         # If we are here, that means all commands ran successfully.
         if status:
             update_job(session, job)
     finally:
         disconnect_all()
+        os.system('stty sane')
 
 
 def main(args):

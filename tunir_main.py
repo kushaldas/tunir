@@ -76,6 +76,7 @@ def run_job(job_name='', config=None):
 def main(args):
     "Starting point of the code"
     job_name = ''
+    vm = None
     if args.job:
         job_name = args.job
     else:
@@ -86,15 +87,17 @@ def main(args):
     if not config: # Bad config name
         sys.exit(-1)
 
-    vm = build_and_run(config['image'], config['ram'], graphics=True, vnc=False, atomic=False)
-    job_pid = vm.pid # The pid to kill at the end
-    # We should wait for a minute here
-    time.sleep(60)
+    if config['type'] == 'vm':
+        vm = build_and_run(config['image'], config['ram'], graphics=True, vnc=False, atomic=False)
+        job_pid = vm.pid # The pid to kill at the end
+        # We should wait for a minute here
+        time.sleep(60)
     try:
         run_job(job_name, config)
     finally:
         # Now let us kill the kvm process
-        os.kill(job_pid, signal.SIGKILL)
+        if vm:
+            os.kill(job_pid, signal.SIGKILL)
 
 
 if __name__ == '__main__':

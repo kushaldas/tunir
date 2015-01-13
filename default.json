@@ -1,5 +1,6 @@
 {
   "name": "default",
+  "type": "vm",
   "image": "file:///tmp/Fedora-Cloud-Base-20141203-21.x86_64.qcow2",
   "ram": 2048,
   "user": "fedora",

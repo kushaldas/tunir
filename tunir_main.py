@@ -10,6 +10,7 @@ from pprint import pprint
 from testvm import build_and_run
 from fabric.api import settings, run, sudo
 from fabric.network import disconnect_all
+from tunirresult import download_result
 from tunirdb import add_job, create_session, add_result, update_job
 from tunirlib.default_config import DB_URL
 
@@ -115,6 +116,10 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--job", help="The job configuration name to run")
+    parser.add_argument("--result", help="Gets the result file for the given job.")
     args = parser.parse_args()
+    if args.result:
+        download_result(args.result)
+        sys.exit(0)
     main(args)
 

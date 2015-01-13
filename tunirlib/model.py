@@ -26,6 +26,7 @@ import datetime
 import logging
 import time
 
+
 import sqlalchemy as sa
 from sqlalchemy import create_engine
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -122,6 +123,7 @@ class Job(BASE):
     user = sa.Column(sa.String(255), nullable=False)
     password = sa.Column(sa.String(255), nullable=False)
     status = sa.Column(sa.Boolean, default=False)
+    when = sa.Column(sa.DateTime, default=datetime.datetime.now())
 
     def __repr__(self):
         return '<Job(id=%d, name=%s, image=%s, ram=%s, user=%s, password=%s)>' % \

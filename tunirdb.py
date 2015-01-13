@@ -53,6 +53,15 @@ def update_job(session, job):
     session.add(job)
     session.commit()
 
+def get_job(session, job_id):
+    query = session.query(
+        model.Job
+    ).filter(
+        model.Job.id  == job_id
+    )
+
+    return query.first()
+
 
 if __name__ == '__main__':
     SESSION = create_session(DB_URL)

@@ -19,3 +19,8 @@ download a cloud image, which can be used to boot up the system.
 
 For my testing I am using the Fedora 21 cloud image, I keep it
 under */tmp* directory.
+
+## Rules for the commands in txt files
+
+Write @@ at the start of the line if you know the command will fail. This will count
+that command failure as a success.

@@ -1,2 +1,3 @@
 ls -l /
-sudo:: cat /etc/shadow
+sudo cat /etc/shadow
+@@ ping -c 3 foos.kushaldas.in

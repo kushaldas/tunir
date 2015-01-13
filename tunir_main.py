@@ -51,18 +51,28 @@ def run_job(job_name='', config=None):
         status = True
         job = add_job(session, name=job_name, image=config['image'],
                       ram=config['ram'], user=config['user'], password=config['password'])
+        print "Starting Job: %s" % job.id
         for command in commands:
+            negative = False
             command = command.strip('')
             with settings(host_string="localhost:2222", user="fedora", password="passw0rd",
                               warn_only=True):
                 result = None
                 if command.startswith('sudo::'): # This is a sudo command
                     result = sudo(command[6:].strip())
+                elif command.startswith('@@'):
+                    result = run(command[3:].strip())
+                    if result.return_code != 0: # If the command does not fail, then it is a failure.
+                        negative = True
                 else:
                     result = run(command)
-                add_result(session, job.id, command, unicode(result),
+                if negative:
+                    add_result(session, job.id, command, unicode(result),
+                           result.return_code, status=True)
+                else:
+                    add_result(session, job.id, command, unicode(result),
                            result.return_code)
-                if result.return_code != 0:
+                if result.return_code != 0 and not negative:
                     # Save the error message and status as fail.
                     status = False
                     break

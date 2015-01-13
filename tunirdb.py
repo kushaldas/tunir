@@ -39,11 +39,10 @@ def add_job(session, name, image, ram, user, password):
     session.commit()
     return job
 
-def add_result(session, job_id, command, output, return_code):
+def add_result(session, job_id, command, output, return_code, status=False):
     'Adds a new result for a command'
-    status = True
-    if return_code != 0:
-        status = False
+    if return_code == 0:
+        status = True
     res = model.Result(job_id=job_id, command=command, output=output,
                        return_code=return_code, status=status )
     session.add(res)

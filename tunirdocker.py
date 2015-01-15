@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 "Tunir module to talk to docker"
 
 # Copyright © 2015  Kushal Das <kushaldas@gmail.com>
@@ -28,6 +29,20 @@ def system(command):
     out, err = ret.communicate()
     return out, err
 
+class Result(object):
+    """
+    To hold results from docker command executions.
+    """
+    def __init__(self, msg, ret_code=0):
+        self.msg = unicode(msg)
+        self.return_code = ret_code
+
+    def __repr__(self):
+        return self.msg
+
+    def __str__(self):
+        return self.msg
+
 
 class Docker(object):
     """
@@ -54,6 +69,21 @@ class Docker(object):
     def rm(self):
         "Removes the current container."
         system('docker rm --force %s' % self.cid)
+
+    def execute(self, command):
+        """
+        Executes a command and returns a result
+        :param command: The command to execute
+        :return: Returns a result object similar to Fabric API.
+        """
+        res = Result('')
+        out, err = self.run(command)
+        if err:
+            res.msg = u'%s %s' % (out, err)
+            res.return_code = -1
+        else:
+            res.msg = unicode(out)
+        return res
 
 
 

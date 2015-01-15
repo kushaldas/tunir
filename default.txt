@@ -1,3 +1,4 @@
 ls -l /
 sudo cat /etc/shadow
+SLEEP 3
 @@ ping -c 3 foos.kushaldas.in

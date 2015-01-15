@@ -55,7 +55,13 @@ def run_job(job_name='', config=None):
         print "Starting Job: %s" % job.id
         for command in commands:
             negative = False
-            command = command.strip('')
+            command = command.strip('\n')
+            if command.startswith('SLEEP'): # We will have to sleep
+                word = command.split(' ')[1]
+                print "Sleeping for %s." % word
+                time.sleep(int(word))
+                continue
+
             with settings(host_string="localhost:2222", user="fedora", password="passw0rd",
                               warn_only=True):
                 result = None

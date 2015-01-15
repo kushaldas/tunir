@@ -1,0 +1,6 @@
+{
+  "name": "dockerexample",
+  "type": "docker",
+  "image": "fedora:latest",
+  "wait": "900"
+}

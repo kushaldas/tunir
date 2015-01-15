@@ -1,0 +1,5 @@
+ls -l /
+yum install sudo -y
+sudo cat /etc/shadow
+SLEEP 3
+@@ ping -c 3 foos.kushaldas.in

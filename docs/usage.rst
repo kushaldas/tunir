@@ -57,3 +57,35 @@ rebooting the system, you may want to use **SLEEP NUMBER_OF_SECONDS** command th
 
 If a command starts with @@ sign, it means the command is supposed to fail. Generally we check the return codes
 of the commands to find if it failed, or not. For Docker container based systems, we track the stderr output.
+
+
+Create the database schema
+---------------------------
+::
+
+    $ python createdb.py
+
+The path of the database is configured in the tunirlib/default_config.py file. Currently it stays under /tmp.
+
+
+Start a new job
+---------------
+
+::
+
+    $ sudo ./tunir_main.py --job jobname
+
+
+Find the result from a job
+--------------------------
+
+::
+
+    $ ./tunir_main.py --result JOB_ID
+
+The above command will create a file *result-JOB_ID.txt* in the current directory. It will overwrite any file (if exits).
+In case you want to just print the result on the console use the following command.::
+
+    $ ./tunir_main.py --result JOB_ID --text
+
+

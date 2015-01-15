@@ -11,19 +11,34 @@ def download_result(job_id=None):
     :return: None
     """
 
+    res = text_result(job_id)
+    if not res:
+        return
+    name = 'result-%s.txt' % job_id
+    with open(name, 'w') as fobj:
+        fobj.write(res)
+
+
+def text_result(job_id=None):
+    """
+    Returns a text version of the result.
+    :param job_id: id of the job.
+    :return: Text version of the report (unicode).
+    """
+
     session = create_session(DB_URL)
     if not job_id:
         return
 
+    result = u''
     job = get_job(session, job_id)
-    name = 'result-%s.txt' % job.id
-    with open(name, 'w') as fobj:
-        if job.status:
-            fobj.write("Passed.\n\n")
-        else:
-            fobj.write("Failed.\n\n")
+    if job.status:
+        result = u"Passed.\n\n"
+    else:
+        result= u"Failed.\n\n"
 
-        for res in job.results:
-            fobj.write('command: %s\nstatus: %s\n' % (res.command, res.status))
-            fobj.write(res.output)
-            fobj.write('\n\n')
+    for res in job.results:
+        result += u'command: %s\nstatus: %s\n' % (res.command, res.status)
+        result += u'\n\n'
+
+    return result

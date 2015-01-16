@@ -18,13 +18,15 @@ from collections import OrderedDict
 
 STR = OrderedDict()
 
-def read_job_configuration(jobname=''):
+def read_job_configuration(jobname='', config_dir='./'):
     """
     :param jobname: Name of the job
+    :param config_dir: Directory for configuration.
     :return: Configuration dict
     """
     data = None
     name = jobname + '.json'
+    name = os.path.join(config_dir, name)
     if not os.path.exists(name):
         print "Job configuration is missing."
         return None
@@ -92,16 +94,17 @@ def update_result(result, session, job, command, negative, stateless):
     return True
 
 
-def run_job(job_name='', config=None, container=None):
+def run_job(jobpath, job_name='', config=None, container=None):
     """
     Runs the given command using fabric.
 
+    :param jobpath: Path to the job file.
     :param job_name: string job name.
     :param config: Configuration of the given job
     :param container: Docker object for a Docker job.
     :return: None
     """
-    if not os.path.exists(job_name + '.txt'):
+    if not os.path.exists(jobpath):
         print "Missing job file."
         return
 
@@ -114,7 +117,7 @@ def run_job(job_name='', config=None, container=None):
     if not args.stateless:
         session = create_session(DB_URL)
 
-    with open(job_name + '.txt') as fobj:
+    with open(jobpath) as fobj:
         commands = fobj.readlines()
 
 
@@ -188,7 +191,7 @@ def main(args):
         sys.exit(-2)
 
     # First let us read the vm configuration.
-    config = read_job_configuration(job_name)
+    config = read_job_configuration(job_name, args.config_dir)
     if not config: # Bad config name
         sys.exit(-1)
 
@@ -199,8 +202,10 @@ def main(args):
         time.sleep(60)
     if config['type'] == 'docker':
         container = Docker(config['image'], int(config.get('wait', 600)))
+    jobpath = os.path.join(args.config_dir, job_name + '.txt')
+
     try:
-        run_job(job_name, config, container)
+        run_job(jobpath, job_name, config, container)
     finally:
         # Now let us kill the kvm process
         if vm:
@@ -216,9 +221,12 @@ if __name__ == '__main__':
     parser.add_argument("--result", help="Gets the result file for the given job.")
     parser.add_argument("--text", help="Print the result.", action='store_true')
     parser.add_argument("--stateless", help="Do not store the result, just print it in the STDOUT.", action='store_true')
+    parser.add_argument("--config-dir", help="Path to the directory where the job config and commands can be found.",
+                        default='./')
     args = parser.parse_args()
     if args.result and args.text:
         print text_result(args.result)
+        sys.exit(0)
     elif args.result:
         download_result(args.result)
         sys.exit(0)

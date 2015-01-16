@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import sys
 import json
@@ -12,7 +10,7 @@ from fabric.api import settings, run, sudo
 from fabric.network import disconnect_all
 from tunirresult import download_result, text_result
 from tunirdb import add_job, create_session, add_result, update_job
-from tunirlib.default_config import DB_URL
+from default_config import DB_URL
 from tunirdocker import Docker
 from collections import OrderedDict
 

@@ -14,7 +14,9 @@ from tunirresult import download_result, text_result
 from tunirdb import add_job, create_session, add_result, update_job
 from tunirlib.default_config import DB_URL
 from tunirdocker import Docker
+from collections import OrderedDict
 
+STR = OrderedDict()
 
 def read_job_configuration(jobname=''):
     """
@@ -54,7 +56,7 @@ def execute(system, command, container=None):
             result = run(command)
     return result, negative
 
-def update_result(result, session, job, command, negative):
+def update_result(result, session, job, command, negative, stateless):
     """
     Updates the result based on input.
 
@@ -63,13 +65,25 @@ def update_result(result, session, job, command, negative):
     :param job: Job object from model.
     :param command: Text command.
     :param negative: If it is a negative command, which is supposed to fail.
+    :param stateless: If it is a stateless job or not.
+
     :return: Boolean, False if the job as whole is failed.
     """
     if negative:
-        add_result(session, job.id, command, unicode(result),
+        if stateless: # For stateless
+            d = {'command': command, 'result': unicode(result),
+                 'ret': result.return_code, 'status': True}
+            STR[command] = d
+        else:
+            add_result(session, job.id, command, unicode(result),
                    result.return_code, status=True)
     else:
-        add_result(session, job.id, command, unicode(result),
+        if stateless: # For stateless
+            d = {'command': command, 'result': unicode(result),
+                 'ret': result.return_code, 'status': True}
+            STR[command] = d
+        else:
+            add_result(session, job.id, command, unicode(result),
                    result.return_code)
     if result.return_code != 0 and not negative:
         # Save the error message and status as fail.
@@ -94,16 +108,24 @@ def run_job(job_name='', config=None, container=None):
     # Now read the commands inside the job file
     # and execute them one by one, we need to save
     # the result too.
-    session = create_session(DB_URL)
     commands = []
+    status = True
+    session = None
+    if not args.stateless:
+        session = create_session(DB_URL)
+
     with open(job_name + '.txt') as fobj:
         commands = fobj.readlines()
 
+
     try:
-        status = True
-        job = add_job(session, name=job_name, image=config['image'],
-                      ram=config.get('ram', 0), user=config.get('user', 'root'), password=config.get('password', 'none'))
-        print "Starting Job: %s" % job.id
+        job = None
+        if not args.stateless:
+            job = add_job(session, name=job_name, image=config['image'],
+                          ram=config.get('ram', 0), user=config.get('user', 'root'), password=config.get('password', 'none'))
+            print "Starting Job: %s" % job.id
+        else:
+            print "Starting a stateless job."
 
         for command in commands:
             negative = False
@@ -117,7 +139,7 @@ def run_job(job_name='', config=None, container=None):
             if config['type'] == 'docker':
                 # We want to run a container and use that.
                 result, negative = execute('docker', command, container)
-                status = update_result(result, session, job, command, negative)
+                status = update_result(result, session, job, command, negative, args.stateless)
                 if not status:
                     break
             else:
@@ -132,16 +154,27 @@ def run_job(job_name='', config=None, container=None):
                 with settings(host_string=host_string, user=user, password=password,
                                   warn_only=True):
                     result, negative = execute(config['type'], command)
-                    status = update_result(result, session, job, command, negative)
+                    status = update_result(result, session, job, command, negative, args.stateless)
                     if not status:
                         break
 
         # If we are here, that means all commands ran successfully.
         if status:
-            update_job(session, job)
+            if not args.stateless:
+                update_job(session, job)
     finally:
         disconnect_all()
         os.system('stty sane')
+
+        # Now for stateless jobs
+        if args.stateless:
+            print "\n\nJob status: %s\n\n" % status
+
+            for key, value in STR.iteritems():
+                print "command: %s" % value['command']
+                print "status: %s\n" % value['status']
+                print value['result']
+                print "\n"
 
 
 def main(args):
@@ -182,6 +215,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--result", help="Gets the result file for the given job.")
     parser.add_argument("--text", help="Print the result.", action='store_true')
+    parser.add_argument("--stateless", help="Do not store the result, just print it in the STDOUT.", action='store_true')
     args = parser.parse_args()
     if args.result and args.text:
         print text_result(args.result)

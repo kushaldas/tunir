@@ -1,0 +1,7 @@
+include tunir
+include *.py
+recursive-include docs *
+include README.md
+include MANIFEST.in
+include *.json
+include *.txt

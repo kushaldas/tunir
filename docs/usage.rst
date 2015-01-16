@@ -67,6 +67,8 @@ Create the database schema
 
 The path of the database is configured in the tunirlib/default_config.py file. Currently it stays under /tmp.
 
+.. note:: You do not need a database if you are only running stateless jobs.
+
 
 Start a new job
 ---------------
@@ -95,5 +97,14 @@ Job configuration directory
 You can actually provide a path to tunir so that it can pick up job configuration and commands from the given directory.::
 
     $ sudo ./tunir_main.py --job jobname --config-dir /etc/tunirjobs/
+
+
+Stateless jobs
+---------------
+
+You can run a job as stateless, you will not require any database for that. This will print the result at the end of the
+run.::
+
+    $ sudo ./tunir_main.py --job jobname --stateless
 
 

@@ -63,7 +63,7 @@ Create the database schema
 ---------------------------
 ::
 
-    $ python createdb.py
+    $ python tunirlib/createdb.py
 
 The path of the database is configured in the tunirlib/default_config.py file. Currently it stays under /tmp.
 
@@ -75,7 +75,7 @@ Start a new job
 
 ::
 
-    $ sudo ./tunir_main.py --job jobname
+    $ sudo ./tunir --job jobname
 
 
 Find the result from a job
@@ -83,12 +83,12 @@ Find the result from a job
 
 ::
 
-    $ ./tunir_main.py --result JOB_ID
+    $ ./tunir --result JOB_ID
 
 The above command will create a file *result-JOB_ID.txt* in the current directory. It will overwrite any file (if exits).
 In case you want to just print the result on the console use the following command.::
 
-    $ ./tunir_main.py --result JOB_ID --text
+    $ ./tunir --result JOB_ID --text
 
 
 Job configuration directory
@@ -96,7 +96,7 @@ Job configuration directory
 
 You can actually provide a path to tunir so that it can pick up job configuration and commands from the given directory.::
 
-    $ sudo ./tunir_main.py --job jobname --config-dir /etc/tunirjobs/
+    $ sudo ./tunir --job jobname --config-dir /etc/tunirjobs/
 
 
 Stateless jobs
@@ -105,6 +105,6 @@ Stateless jobs
 You can run a job as stateless, you will not require any database for that. This will print the result at the end of the
 run.::
 
-    $ sudo ./tunir_main.py --job jobname --stateless
+    $ sudo ./tunir --job jobname --stateless
 
 

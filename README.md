@@ -10,6 +10,7 @@ Read the [documentation](http://tunir.rtfd.org) for more details.
 - libguestfs-tools
 - fabric
 - sqlalchemy
+- docker (optional)
 
 To install them in Fedora use the following command.
 
@@ -30,9 +31,9 @@ that command failure as a success.
 
 ## How to run the default job?
 
-$ sudo ./tunir_main.py --job default
+$ sudo ./tunir --job default
 
 ## How to view the result for a job_id?
 
-% ./tunir_main.py --result job_id
+% ./tunir --result job_id
 

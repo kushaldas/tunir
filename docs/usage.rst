@@ -89,3 +89,11 @@ In case you want to just print the result on the console use the following comma
     $ ./tunir_main.py --result JOB_ID --text
 
 
+Job configuration directory
+----------------------------
+
+You can actually provide a path to tunir so that it can pick up job configuration and commands from the given directory.::
+
+    $ sudo ./tunir_main.py --job jobname --config-dir /etc/tunirjobs/
+
+

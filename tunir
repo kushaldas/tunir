@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+
+import sys
+import argparse
+from tunirlib.tunirmain import main
+from tunirlib.tunirresult import text_result, download_result
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--job", help="The job configuration name to run")
+
+    parser.add_argument("--result", help="Gets the result file for the given job.")
+    parser.add_argument("--text", help="Print the result.", action='store_true')
+    parser.add_argument("--stateless", help="Do not store the result, just print it in the STDOUT.", action='store_true')
+    parser.add_argument("--config-dir", help="Path to the directory where the job config and commands can be found.",
+                        default='./')
+    args = parser.parse_args()
+    if args.result and args.text:
+        print text_result(args.result)
+        sys.exit(0)
+    elif args.result:
+        download_result(args.result)
+        sys.exit(0)
+    main(args)

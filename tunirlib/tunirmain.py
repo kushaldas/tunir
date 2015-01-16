@@ -92,10 +92,11 @@ def update_result(result, session, job, command, negative, stateless):
     return True
 
 
-def run_job(jobpath, job_name='', config=None, container=None):
+def run_job(args, jobpath, job_name='', config=None, container=None):
     """
     Runs the given command using fabric.
 
+    :param args: Command line arguments.
     :param jobpath: Path to the job file.
     :param job_name: string job name.
     :param config: Configuration of the given job
@@ -203,7 +204,7 @@ def main(args):
     jobpath = os.path.join(args.config_dir, job_name + '.txt')
 
     try:
-        run_job(jobpath, job_name, config, container)
+        run_job(args, jobpath, job_name, config, container)
     finally:
         # Now let us kill the kvm process
         if vm:

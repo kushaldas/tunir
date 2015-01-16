@@ -121,7 +121,15 @@ def run_job(job_name='', config=None, container=None):
                 if not status:
                     break
             else:
-                with settings(host_string="localhost:2222", user="fedora", password="passw0rd",
+                host_string = 'localhost:2222'
+                user = 'fedora'
+                password = 'passw0rd'
+                if config['type'] == 'bare':
+                    host_string = config['image']
+                    user = config['user']
+                    password = config['password']
+
+                with settings(host_string=host_string, user=user, password=password,
                                   warn_only=True):
                     result, negative = execute(config['type'], command)
                     status = update_result(result, session, job, command, negative)

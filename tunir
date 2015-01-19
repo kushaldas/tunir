@@ -2,7 +2,7 @@
 
 import sys
 import argparse
-from tunirlib.tunirmain import main
+from tunirlib import main
 from tunirlib.tunirresult import text_result, download_result
 
 if __name__ == '__main__':

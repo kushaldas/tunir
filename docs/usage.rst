@@ -17,6 +17,8 @@ a rpm, please check */usr/share/tunir/* directory for the same.::
 
     $ python createports.py
 
+.. note:: This is very import. Please have the queue with usable ports ready before any
+   other step.
 
 Configuring a new job
 ----------------------

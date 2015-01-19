@@ -18,7 +18,8 @@ a rpm, please check */usr/share/tunir/* directory for the same.::
     $ python createports.py
 
 .. note:: This is very import. Please have the queue with usable ports ready before any
-   other step.
+   other step. We are having from 2222 to 2230 as the default ports available in the 
+   createports.py
 
 Configuring a new job
 ----------------------

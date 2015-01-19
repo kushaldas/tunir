@@ -228,8 +228,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'tunir', u'Tunir Documentation',
-     [u'Kushal Das'], 1)
+    ('index', 'tunir', u'Tunir, the simple CI with a big heart.',
+     [u'Kushal Das'], 8)
 ]
 
 # If true, show URL addresses after external links.

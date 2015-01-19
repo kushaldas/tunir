@@ -7,6 +7,17 @@ to the vm or bare metal tests.
 
 The current version can be used along with cron ton run in predefined times.
 
+Enabling a queue of ports for the vms
+-------------------------------------
+
+We maintain a queue of available ports in the local system, which will be used to create
+vm(s). We maintain this queue in Redis. We have a helper script which can enable some
+default ports to be used, they are defined in the *createports.py*. In case you are using
+a rpm, please check */usr/share/tunir/* directory for the same.::
+
+    $ python createports.py
+
+
 Configuring a new job
 ----------------------
 

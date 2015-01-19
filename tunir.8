@@ -1,0 +1,277 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "TUNIR" "8" "January 19, 2015" "0.1" "Tunir"
+.SH NAME
+tunir \- Tunir, the simple CI with a big heart.
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Tunir is a simple CI system. The goal is to have a system which is
+simple to setup, and easy to maintain.
+.sp
+Contents:
+.SH INSTALLATION
+.sp
+Tunir is written in Python. Currently it works with Python2.7+
+.SS Clone the repository
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ git clone https://github.com/kushaldas/tunir.git
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Install the dependencies
+.sp
+We are currently depended on the following projects or libraries.
+.INDENT 0.0
+.IP \(bu 2
+libvirt
+.IP \(bu 2
+libguestfs
+.IP \(bu 2
+libguestfs\-tools
+.IP \(bu 2
+fabric
+.IP \(bu 2
+sqlalchemy
+.IP \(bu 2
+redis
+.IP \(bu 2
+python\-redis
+.IP \(bu 2
+docker  (optional)
+.UNINDENT
+.sp
+You can install them in Fedora by the following command:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo dnf install libguestfs\-tools fabric python\-sqlalchemy docker\-io python\-redis redis
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Start the redis server with the following command.:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo service redis start
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH USAGE
+.sp
+Tunir is a CI system which can run a set of commands/tests in a new cloud vm, or bare metal,
+or in Docker containers based on the job configurations. It uses fabric project to connect
+to the vm or bare metal tests.
+.sp
+The current version can be used along with cron ton run in predefined times.
+.SS Enabling a queue of ports for the vms
+.sp
+We maintain a queue of available ports in the local system, which will be used to create
+vm(s). We maintain this queue in Redis. We have a helper script which can enable some
+default ports to be used, they are defined in the \fIcreateports.py\fP\&. In case you are using
+a rpm, please check \fI/usr/share/tunir/\fP directory for the same.:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ python createports.py
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+This is very import. Please have the queue with usable ports ready before any
+other step. We are having from 2222 to 2230 as the default ports available in the
+createports.py
+.UNINDENT
+.UNINDENT
+.SS Configuring a new job
+.sp
+For each different job, two files are required. For example \fIdefault\fP job has two files,
+\fBdefault.json\fP and \fBdefault.txt\fP\&.
+.SS jobname.json
+.sp
+This file is the main configuration for the job. Below is the example of one such job.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+{
+  "name": "jobname",
+  "type": "vm",
+  "image": "file:///home/vms/Fedora\-Cloud\-Base\-20141203\-21.x86_64.qcow2",
+  "ram": 2048,
+  "user": "fedora",
+  "password": "passw0rd"
+}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The possible keys are mentioned below.
+.INDENT 0.0
+.TP
+.B name
+The name of the job, must match the filename.
+.TP
+.B type
+The type of system in which the tests will run. Possible values are vm, docker, bare.
+.TP
+.B image
+Path to the cloud image in case of a vm, you can provide docker image there for Docker based tests. It can also provide the ip/hostname of the bare metal box.
+.TP
+.B ram
+The amount of ram for the vm. Optional for bare or docker types.
+.TP
+.B user
+The username to connect to.
+.TP
+.B password
+The password of the given user. Right now for cloud vm(s) it is set to \fIpassw0rd\fP\&.
+.UNINDENT
+.SS jobname.txt
+.sp
+This text file contains the bash commands to run in the system. One command on each line. In case you are
+rebooting the system, you may want to use \fBSLEEP NUMBER_OF_SECONDS\fP command there.
+.sp
+If a command starts with @@ sign, it means the command is supposed to fail. Generally we check the return codes
+of the commands to find if it failed, or not. For Docker container based systems, we track the stderr output.
+.SS Create the database schema
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ python tunirlib/createdb.py
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The path of the database is configured in the tunirlib/default_config.py file. Currently it stays under /tmp.
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+You do not need a database if you are only running stateless jobs.
+.UNINDENT
+.UNINDENT
+.SS Start a new job
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo ./tunir \-\-job jobname
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Find the result from a job
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ ./tunir \-\-result JOB_ID
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The above command will create a file \fIresult\-JOB_ID.txt\fP in the current directory. It will overwrite any file (if exits).
+In case you want to just print the result on the console use the following command.:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ ./tunir \-\-result JOB_ID \-\-text
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Job configuration directory
+.sp
+You can actually provide a path to tunir so that it can pick up job configuration and commands from the given directory.:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo ./tunir \-\-job jobname \-\-config\-dir /etc/tunirjobs/
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Stateless jobs
+.sp
+You can run a job as stateless, you will not require any database for that. This will print the result at the end of the
+run.:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo ./tunir \-\-job jobname \-\-stateless
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.INDENT 0.0
+.IP \(bu 2
+\fIgenindex\fP
+.IP \(bu 2
+\fImodindex\fP
+.IP \(bu 2
+\fIsearch\fP
+.UNINDENT
+.SH AUTHOR
+Kushal Das
+.SH COPYRIGHT
+2015, Kushal Das
+.\" Generated by docutils manpage writer.
+.

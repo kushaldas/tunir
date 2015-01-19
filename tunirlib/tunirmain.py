@@ -2,8 +2,11 @@ import os
 import sys
 import json
 import time
+import redis
 import signal
 import argparse
+import tempfile
+import shutil
 from pprint import pprint
 from testvm import build_and_run
 from fabric.api import settings, run, sudo
@@ -71,16 +74,22 @@ def update_result(result, session, job, command, negative, stateless):
     """
     if negative:
         if stateless: # For stateless
+            status = True
+            if result.return_code == 0:
+                status = False
             d = {'command': command, 'result': unicode(result),
-                 'ret': result.return_code, 'status': True}
+                 'ret': result.return_code, 'status': status}
             STR[command] = d
         else:
             add_result(session, job.id, command, unicode(result),
                    result.return_code, status=True)
     else:
         if stateless: # For stateless
+            status = True
+            if result.return_code != 0:
+                status = False
             d = {'command': command, 'result': unicode(result),
-                 'ret': result.return_code, 'status': True}
+                 'ret': result.return_code, 'status': status}
             STR[command] = d
         else:
             add_result(session, job.id, command, unicode(result),
@@ -92,7 +101,7 @@ def update_result(result, session, job, command, negative, stateless):
     return True
 
 
-def run_job(args, jobpath, job_name='', config=None, container=None):
+def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
     """
     Runs the given command using fabric.
 
@@ -101,6 +110,7 @@ def run_job(args, jobpath, job_name='', config=None, container=None):
     :param job_name: string job name.
     :param config: Configuration of the given job
     :param container: Docker object for a Docker job.
+    :param port: The port number to connect in case of a vm.
     :return: None
     """
     if not os.path.exists(jobpath):
@@ -145,7 +155,7 @@ def run_job(args, jobpath, job_name='', config=None, container=None):
                 if not status:
                     break
             else:
-                host_string = 'localhost:2222'
+                host_string = 'localhost:%s' % port
                 user = 'fedora'
                 password = 'passw0rd'
                 if config['type'] == 'bare':
@@ -179,10 +189,29 @@ def run_job(args, jobpath, job_name='', config=None, container=None):
                 print "\n"
 
 
+def get_port():
+    "Gets the latest port from redis queue."
+    r = redis.Redis()
+    port = r.rpop('tunirports')
+    print "Got port: %s" % port
+    return port
+
+def return_port(port):
+    """
+     Returns the port to the queue.
+    :param port: The port number
+    :return: None
+    """
+    r = redis.Redis()
+    port = r.lpush('tunirports', port)
+    return port
+
 def main(args):
     "Starting point of the code"
     job_name = ''
     vm = None
+    port = None
+    temp_d = None
     container = None
     if args.job:
         job_name = args.job
@@ -195,7 +224,18 @@ def main(args):
         sys.exit(-1)
 
     if config['type'] == 'vm':
-        vm = build_and_run(config['image'], config['ram'], graphics=True, vnc=False, atomic=False)
+        # First get us the free port number from redis queue.
+        port = get_port()
+        if not port:
+            print "No port found in the redis queue."
+            return
+        # Now we need a temporary directory
+        temp_d = tempfile.mkdtemp()
+        os.system('chmod 0777 %s' % temp_d)
+        os.mkdir(os.path.join(temp_d, 'meta'))
+        vm = build_and_run(config['image'], config['ram'],
+                           graphics=True, vnc=False, atomic=False,
+                           port=port, temppath=temp_d)
         job_pid = vm.pid # The pid to kill at the end
         # We should wait for a minute here
         time.sleep(60)
@@ -204,11 +244,14 @@ def main(args):
     jobpath = os.path.join(args.config_dir, job_name + '.txt')
 
     try:
-        run_job(args, jobpath, job_name, config, container)
+        run_job(args, jobpath, job_name, config, container, port)
     finally:
         # Now let us kill the kvm process
         if vm:
             os.kill(job_pid, signal.SIGKILL)
+            if temp_d:
+                shutil.rmtree(temp_d)
+            return_port(port)
         if container:
             container.rm()
 

@@ -19,7 +19,7 @@ import shutil
 import config
 
 
-def koji_download(urls):
+def koji_download(urls, download_path):
     """ Downloads files (qcow2s, specifically) from a list of URLs with an
     optional progress bar. Returns a list of raw image files. """
 
@@ -27,19 +27,17 @@ def koji_download(urls):
     # that's the internet version of sitting in front of someone's house with
     # a sign saying "FREE." Thanks oddshocks!
 
-    # Create the proper local upload directory if it doesn't exist.
-    if not os.path.exists(config.LOCAL_DOWNLOAD_DIR):
-        os.makedirs(config.LOCAL_DOWNLOAD_DIR)
+    # Create the proper local upload directory
 
     print "Local downloads will be stored in {}.".format(
-        config.LOCAL_DOWNLOAD_DIR)
+        download_path)
 
     # When qcow2s are downloaded and converted, they are added here
     raw_files = list()
 
     for url in urls:
         file_name = url.split('/')[-1]
-        local_file_name = config.LOCAL_DOWNLOAD_DIR + file_name
+        local_file_name = os.path.join(download_path, file_name)
         u = urllib2.urlopen(url)
         try:
             with open(local_file_name, 'wb') as f:
@@ -181,7 +179,7 @@ def download_initrd_and_kernel(qcow2_image, path):
 
 def boot_image(
         qcow2, seed, initrd=None, kernel=None, ram=1024, graphics=False,
-        vnc=False, atomic=False):
+        vnc=False, atomic=False, port=''):
     """Boot the cloud image redirecting local port 8888 to 80 on the vm as
     well as local port 2222 to 22 on the vm so http and ssh can be accessed."""
 
@@ -193,9 +191,7 @@ def boot_image(
                  '-drive',
                  'file=%s,if=virtio' % seed,
                  '-redir',
-                 'tcp:2222::22',
-                 '-redir',
-                 'tcp:8888::80',
+                 'tcp:%s::22' % port,
                  ]
 
     if not atomic:
@@ -213,6 +209,7 @@ def boot_image(
     if vnc:
         boot_args.extend(['-vnc', '0.0.0.0:1'])
 
+    print ' '.join(boot_args)
     vm = subprocess.Popen(boot_args)
 
     print "Successfully booted your local cloud image!"
@@ -222,14 +219,14 @@ def boot_image(
 
 
 def build_and_run(
-        image_url, ram=1024, graphics=False, vnc=False, atomic=False):
+        image_url, ram=1024, graphics=False, vnc=False, atomic=False, port='', temppath='/tmp'):
     """Run through all the steps."""
 
     print "cleaning and creating dirs..."
     clean_dirs()
     create_dirs()
 
-    base_path = '/tmp/testCloud'
+    base_path = temppath
 
     # Create cloud-init data
     print "Creating meta-data..."
@@ -240,11 +237,11 @@ def build_and_run(
 
     # Download image and get kernel/initrd
 
-    image_file = '/tmp/' + image_url.split('/')[-1]
+    image_file = os.path.join(base_path, image_url.split('/')[-1])
 
     if not os.path.isfile(image_file):
         print "downloading new image..."
-        image = koji_download([image_url])[0]
+        image = koji_download([image_url], temppath)[0]
 
         if atomic:
                 expand_qcow(image)
@@ -261,7 +258,8 @@ def build_and_run(
                         ram=ram,
                         graphics=graphics,
                         vnc=vnc,
-                        atomic=atomic)
+                        atomic=atomic,
+                        port=port)
     else:
         vm = boot_image(image,
                         base_path + '/seed.img',
@@ -269,7 +267,8 @@ def build_and_run(
                         external['kernel'],
                         ram=ram,
                         graphics=graphics,
-                        vnc=vnc)
+                        vnc=vnc,
+                        port=port)
 
     return vm
 

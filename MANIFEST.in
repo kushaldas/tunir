@@ -1,6 +1,6 @@
 include tunir
 include *.py
-recursive-include docs *
+include docs/*.rst
 include README.md
 include MANIFEST.in
 include *.json

@@ -14,7 +14,7 @@ setup(name = 'tunir',
     packages=find_packages(),
     data_files=[('share/tunir',
                   ['createports.py', 'default.json',
-                    'default.txt', 'dockerjob.json', 'dockerjob.txt'])],
+                    'default.txt', 'dockerjob.json', 'dockerjob.txt', 'tunir.config'])],
     entry_points = {
           'console_scripts': [
               'tunir = tunirlib:startpoint'

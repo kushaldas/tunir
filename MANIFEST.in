@@ -1,4 +1,5 @@
 include tunir
+include tunir.8
 include *.py
 include docs/*.rst
 include README.md

@@ -71,6 +71,11 @@ rebooting the system, you may want to use **SLEEP NUMBER_OF_SECONDS** command th
 If a command starts with @@ sign, it means the command is supposed to fail. Generally we check the return codes
 of the commands to find if it failed, or not. For Docker container based systems, we track the stderr output.
 
+Database path
+-------------
+
+We get that value from a json configuration file named *tunir.config*, either in the current directory or 
+from under /etc. There is an example configuration in the source.
 
 Create the database schema
 ---------------------------

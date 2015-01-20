@@ -17,7 +17,7 @@ setup(name = 'tunir',
                     'default.txt', 'dockerjob.json', 'dockerjob.txt'])],
     entry_points = {
           'console_scripts': [
-              'tunir = tunirlib.__main__:main'
+              'tunir = tunirlib:startpoint'
           ]
       }
     )

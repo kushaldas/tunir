@@ -1,30 +1,29 @@
 Usage
 =====
 
-Tunir is a CI system which can run a set of commands/tests in a new cloud vm, or bare metal,
-or in Docker containers based on the job configurations. It uses fabric project to connect
-to the vm or bare metal tests.
+Tunir is a continuous integration (CI) system which can run a set of commands/tests in a
+new cloud VM, or bare metal, or in Docker containers based on the job configurations.
+It uses fabric project to connect to the vm or bare metal tests.
 
-The current version can be used along with cron ton run in predefined times.
+The current version can be used along with cron to run at predefined times.
 
-Enabling a queue of ports for the vms
+Enabling a queue of ports for the VMs
 -------------------------------------
 
 We maintain a queue of available ports in the local system, which will be used to create
-vm(s). We maintain this queue in Redis. We have a helper script which can enable some
-default ports to be used, they are defined in the *createports.py*. In case you are using
+VM(s). We maintain this queue in Redis. We have a helper script which can enable some
+default ports to be used. They are defined in the *createports.py*. In case you are using
 a rpm, please check */usr/share/tunir/* directory for the same.::
 
     $ python createports.py
 
-.. note:: This is very import. Please have the queue with usable ports ready before any
-   other step. We are having from 2222 to 2230 as the default ports available in the 
-   createports.py
+.. note:: This is very important. Please have the queue with usable ports ready before any
+   other step. We use ports 2222 to 2230 as the default ports available in createports.py.
 
 Configuring a new job
 ----------------------
 
-For each different job, two files are required. For example *default* job has two files,
+For each different job, two files are required. For example, *default* job has two files,
 **default.json** and **default.txt**.
 
 jobname.json
@@ -46,27 +45,27 @@ This file is the main configuration for the job. Below is the example of one suc
 The possible keys are mentioned below.
 
 name
-    The name of the job, must match the filename.
+    The name of the job, which must match the filename.
 
 type
     The type of system in which the tests will run. Possible values are vm, docker, bare.
 
 image
-    Path to the cloud image in case of a vm, you can provide docker image there for Docker based tests. It can also provide the ip/hostname of the bare metal box.
+    Path to the cloud image in case of a VM. You can provide docker image there for Docker based tests, or the ip/hostname of the bare metal box.
 
 ram
-    The amount of ram for the vm. Optional for bare or docker types.
+    The amount of RAM for the VM. Optional for bare or docker types.
 
 user
     The username to connect to.
 
 password
-    The password of the given user. Right now for cloud vm(s) it is set to *passw0rd*.
+    The password of the given user. Right now for cloud VM(s) it is set to *passw0rd*.
 
 jobname.txt
 ------------
 
-This text file contains the bash commands to run in the system. One command on each line. In case you are
+This text file contains the bash commands to run in the system, one command per line. In case you are
 rebooting the system, you may want to use **SLEEP NUMBER_OF_SECONDS** command there.
 
 If a command starts with @@ sign, it means the command is supposed to fail. Generally we check the return codes
@@ -116,7 +115,7 @@ You can actually provide a path to tunir so that it can pick up job configuratio
 Stateless jobs
 ---------------
 
-You can run a job as stateless, you will not require any database for that. This will print the result at the end of the
+You can run a job as stateless, which does not require any database. This will print the result at the end of the
 run.::
 
     $ sudo ./tunir --job jobname --stateless

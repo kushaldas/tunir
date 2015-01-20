@@ -155,7 +155,7 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 if not status:
                     break
             else:
-                host_string = 'localhost:%s' % port
+                host_string = '127.0.0.1:%s' % port
                 user = 'fedora'
                 password = 'passw0rd'
                 if config['type'] == 'bare':
@@ -256,7 +256,7 @@ def main(args):
             container.rm()
 
 
-if __name__ == '__main__':
+def startpoint():
     parser = argparse.ArgumentParser()
     parser.add_argument("--job", help="The job configuration name to run")
 
@@ -274,3 +274,5 @@ if __name__ == '__main__':
         sys.exit(0)
     main(args)
 
+if __name__ == '__main__':
+    startpoint()

@@ -19,7 +19,7 @@ We are currently depended on the following projects or libraries.
 - libvirt
 - libguestfs
 - libguestfs-tools
-- fabric
+- paramiko
 - sqlalchemy
 - redis
 - python-redis
@@ -28,7 +28,7 @@ We are currently depended on the following projects or libraries.
 
 You can install them in Fedora by the following command::
 
-    $ sudo dnf install libguestfs-tools fabric python-sqlalchemy docker-io python-redis redis
+    $ sudo dnf install libguestfs-tools python-fabric python-sqlalchemy docker-io python-redis redis
 
 
 Start the redis server with the following command.::

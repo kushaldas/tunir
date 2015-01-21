@@ -1,4 +1,4 @@
 redis
-fabric
+paramiko
 sqlalchemy
 

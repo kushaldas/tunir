@@ -34,15 +34,16 @@ def run(host='127.0.0.1', port=22, user='root',
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(hostname=host, port=port,
-                   username=user, password=password)
+                   username=user, password=password, banner_timeout=10)
     chan = client.get_transport().open_session()
     chan.settimeout(None)
+    chan.set_combine_stderr(True)
     chan.exec_command(command)
     stdout = chan.makefile('r', bufsize)
     stderr = chan.makefile_stderr('r', bufsize)
     stdout_text = stdout.read()
     stderr_text = stderr.read()
-    out = Result(stdout_text + stderr_text)
+    out = Result(stdout_text)
     status = int(chan.recv_exit_status())
     client.close()
     out.return_code = status
@@ -279,9 +280,12 @@ def main(args):
             if temp_d:
                 shutil.rmtree(temp_d)
             return_port(port)
-        os.system('stty sane')
         if container:
             container.rm()
+        else:
+            # FIXME!!!
+            # Somehow the terminal is not echoing unless we do the line below.
+            os.system('stty sane')
 
 
 def startpoint():

@@ -7,17 +7,47 @@ import signal
 import argparse
 import tempfile
 import shutil
+import paramiko
 from pprint import pprint
 from testvm import build_and_run
-from fabric.api import settings, run, sudo
-from fabric.network import disconnect_all
 from tunirresult import download_result, text_result
 from tunirdb import add_job, create_session, add_result, update_job
 from default_config import DB_URL
-from tunirdocker import Docker
+from tunirdocker import Docker, Result
 from collections import OrderedDict
 
 STR = OrderedDict()
+
+
+def run(host='127.0.0.1', port=22, user='root',
+                  password='passw0rd', command='/bin/true', bufsize=-1):
+    """
+    Excecutes a command using paramiko and returns the result.
+    :param host: Host to connect
+    :param port: The port number
+    :param user: The username of the system
+    :param password: User password
+    :param command: The command to run
+    :return:
+    """
+    port = int(port)
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(hostname=host, port=port,
+                   username=user, password=password)
+    chan = client.get_transport().open_session()
+    chan.settimeout(None)
+    chan.exec_command(command)
+    stdout = chan.makefile('r', bufsize)
+    stderr = chan.makefile_stderr('r', bufsize)
+    stdout_text = stdout.read()
+    stderr_text = stderr.read()
+    out = Result(stdout_text + stderr_text)
+    status = int(chan.recv_exit_status())
+    client.close()
+    out.return_code = status
+    return out
+
 
 def read_job_configuration(jobname='', config_dir='./'):
     """
@@ -35,13 +65,14 @@ def read_job_configuration(jobname='', config_dir='./'):
         data = json.load(fobj)
     return data
 
-def execute(system, command, container=None):
+def execute(config, command, container=None):
     """
     Executes a given command based on the system.
     :param system: vm, docker or bare.
     :param command: The command to execute
     :return: (Output text, boolean)
     """
+    system = config['type']
     result = ''
     negative = False
     if command.startswith('@@'):
@@ -49,14 +80,16 @@ def execute(system, command, container=None):
         if system == 'docker':
             result = container.execute(command)
         else:
-            result = run(command)
+            result = run(config['host_string'], config['port'], config['user'],
+                         config['password'], command)
         if result.return_code != 0:  # If the command does not fail, then it is a failure.
             negative = True
     else:
         if system == 'docker':
             result = container.execute(command)
         else:
-            result = run(command)
+            result = run(config['host_string'], config['port'], config['user'],
+                         config['password'], command)
     return result, negative
 
 def update_result(result, session, job, command, negative, stateless):
@@ -77,22 +110,22 @@ def update_result(result, session, job, command, negative, stateless):
             status = True
             if result.return_code == 0:
                 status = False
-            d = {'command': command, 'result': unicode(result),
+            d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
                  'ret': result.return_code, 'status': status}
             STR[command] = d
         else:
-            add_result(session, job.id, command, unicode(result),
+            add_result(session, job.id, command, unicode(result, encoding='utf-8', errors='replace'),
                    result.return_code, status=True)
     else:
         if stateless: # For stateless
             status = True
             if result.return_code != 0:
                 status = False
-            d = {'command': command, 'result': unicode(result),
+            d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
                  'ret': result.return_code, 'status': status}
             STR[command] = d
         else:
-            add_result(session, job.id, command, unicode(result),
+            add_result(session, job.id, command, unicode(result, encoding='utf-8', errors='replace'),
                    result.return_code)
     if result.return_code != 0 and not negative:
         # Save the error message and status as fail.
@@ -139,6 +172,8 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
         else:
             print "Starting a stateless job."
 
+        config['host_string'] = '127.0.0.1'
+        config['port'] = port
         for command in commands:
             negative = False
             result = ''
@@ -148,6 +183,8 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 print "Sleeping for %s." % word
                 time.sleep(int(word))
                 continue
+            print "Executing command: %s" % command
+
             if config['type'] == 'docker':
                 # We want to run a container and use that.
                 result, negative = execute('docker', command, container)
@@ -155,29 +192,19 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 if not status:
                     break
             else:
-                host_string = '127.0.0.1:%s' % port
-                user = 'fedora'
-                password = 'passw0rd'
                 if config['type'] == 'bare':
-                    host_string = config['image']
-                    user = config['user']
-                    password = config['password']
+                    config['host_string'] = config['image']
 
-                with settings(host_string=host_string, user=user, password=password,
-                                  warn_only=True):
-                    result, negative = execute(config['type'], command)
-                    status = update_result(result, session, job, command, negative, args.stateless)
-                    if not status:
-                        break
+                result, negative = execute(config, command)
+                status = update_result(result, session, job, command, negative, args.stateless)
+                if not status:
+                    break
 
         # If we are here, that means all commands ran successfully.
         if status:
             if not args.stateless:
                 update_job(session, job)
     finally:
-        disconnect_all()
-        os.system('stty sane')
-
         # Now for stateless jobs
         if args.stateless:
             print "\n\nJob status: %s\n\n" % status
@@ -252,6 +279,7 @@ def main(args):
             if temp_d:
                 shutil.rmtree(temp_d)
             return_port(port)
+        os.system('stty sane')
         if container:
             container.rm()
 

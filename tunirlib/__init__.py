@@ -188,7 +188,7 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
 
             if config['type'] == 'docker':
                 # We want to run a container and use that.
-                result, negative = execute('docker', command, container)
+                result, negative = execute(config, command, container)
                 status = update_result(result, session, job, command, negative, args.stateless)
                 if not status:
                     break

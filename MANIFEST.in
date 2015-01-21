@@ -3,7 +3,7 @@ include tunir.8
 include tunir.config
 include *.py
 include docs/*.rst
-include README.md
+include README.rst
 include MANIFEST.in
 include *.json
 include *.txt

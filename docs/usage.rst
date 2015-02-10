@@ -126,3 +126,15 @@ run.::
     $ sudo ./tunir --job jobname --stateless
 
 
+Docker jobs
+-------------
+
+Docker jobs requires some work on the Docker image you want run. We will have to use a Dockerfile, and make sure
+that sshd is running in that image. In case you are using a Debian based image, you will find the example in the
+official `Docker documentation <https://docs.docker.com/examples/running_ssh_service/>`_.
+
+If you want to use Fedora/CentOS images, then you can use the example `Dockerfile <https://kushal.fedorapeople.org/docker-ssh/>`_ 
+I wrote.
+
+This way in all cases (vm, bare metal, or Docker containers) tunir will work in the same way.
+

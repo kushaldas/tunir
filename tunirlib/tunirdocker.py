@@ -15,6 +15,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+import json
 import subprocess
 
 
@@ -39,50 +40,32 @@ class Result(str):
 
 class Docker(object):
     """
-    Returns a Docker object.
+    Returns a Docker object. The image must have sshd running.
     """
-    def __init__(self, image, wait=600):
+    def __init__(self, image):
         self.image = image
         self.cid = None
         # Now we will start a new container with the given container name
-        out, code = system('docker run -d %s sleep %d' % (image, wait))
+        out, code = system('docker run -d -p 22 %s' % image)
         if not code:
             self.cid = out.strip('\n')
         else:
             print "Some error in creating the container."
-
-    def run(self, command):
-        """
-        Executes the given command in the currect container.
-        :param command: Command to execute
-        :return: Tuple of the output and error message.
-        """
-        return system('docker exec %s %s' % (self.cid, command))
+            return
+        out, code = system('docker inspect %s' % self.cid)
+        data = json.loads(out)
+        self.port  = data[0]['NetworkSettings']['Ports']['22/tcp'][0]['HostPort']
 
     def rm(self):
         "Removes the current container."
         system('docker rm --force %s' % self.cid)
 
-    def execute(self, command):
-        """
-        Executes a command and returns a result
-        :param command: The command to execute
-        :return: Returns a result object similar to Fabric API.
-        """
-        res = None
-        out, err = self.run(command)
-        if err:
-            res = Result(unicode(out + err, encoding='utf-8', errors='replace'))
-            res.return_code = -1
-        else:
-            res = Result(unicode(out, encoding='utf-8', errors='replace'))
-            res.return_code = 0
-        return res
+
 
 
 
 
 if __name__ == '__main__':
-    d = Docker('fedora', 60)
-    print d.execute('ls -l /foobar12')
+    d = Docker('kushaldas/ssh1')
+    print d.cid, d.port
     d.rm()

@@ -1,6 +1,7 @@
 {
   "name": "dockerexample",
   "type": "docker",
-  "image": "fedora:latest",
-  "wait": "900"
+  "image": "fedora-ssh",
+  "user": "root",
+  "password": "passw0rd"
 }

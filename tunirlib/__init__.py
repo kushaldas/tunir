@@ -69,28 +69,21 @@ def read_job_configuration(jobname='', config_dir='./'):
 def execute(config, command, container=None):
     """
     Executes a given command based on the system.
-    :param system: vm, docker or bare.
+    :param config: Configuration dictionary.
     :param command: The command to execute
     :return: (Output text, boolean)
     """
-    system = config['type']
     result = ''
     negative = False
     if command.startswith('@@'):
         command = command[3:].strip()
-        if system == 'docker':
-            result = container.execute(command)
-        else:
-            result = run(config['host_string'], config['port'], config['user'],
+        result = run(config['host_string'], config['port'], config['user'],
                          config['password'], command)
         if result.return_code != 0:  # If the command does not fail, then it is a failure.
             negative = True
     else:
-        if system == 'docker':
-            result = container.execute(command)
-        else:
-            result = run(config['host_string'], config['port'], config['user'],
-                         config['password'], command)
+        result = run(config['host_string'], config['port'], config['user'],
+                        config['password'], command)
     return result, negative
 
 def update_result(result, session, job, command, negative, stateless):
@@ -174,7 +167,14 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
             print "Starting a stateless job."
 
         config['host_string'] = '127.0.0.1'
-        config['port'] = port
+        if config['type'] == 'vm':
+            config['port'] = port
+        elif config['type'] == 'bare':
+            config['host_string'] = config['image']
+        elif config['type'] == 'docker':
+            # Now we will convert this job as a bare metal :)
+            config['type'] = 'bare'
+            config['port'] = int(container.port)
         for command in commands:
             negative = False
             result = ''
@@ -186,20 +186,10 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 continue
             print "Executing command: %s" % command
 
-            if config['type'] == 'docker':
-                # We want to run a container and use that.
-                result, negative = execute(config, command, container)
-                status = update_result(result, session, job, command, negative, args.stateless)
-                if not status:
-                    break
-            else:
-                if config['type'] == 'bare':
-                    config['host_string'] = config['image']
-
-                result, negative = execute(config, command)
-                status = update_result(result, session, job, command, negative, args.stateless)
-                if not status:
-                    break
+            result, negative = execute(config, command)
+            status = update_result(result, session, job, command, negative, args.stateless)
+            if not status:
+                break
 
         # If we are here, that means all commands ran successfully.
         if status:
@@ -268,7 +258,7 @@ def main(args):
         # We should wait for a minute here
         time.sleep(60)
     if config['type'] == 'docker':
-        container = Docker(config['image'], int(config.get('wait', 600)))
+        container = Docker(config['image'])
     jobpath = os.path.join(args.config_dir, job_name + '.txt')
 
     try:

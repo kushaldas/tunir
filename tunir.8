@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "January 21, 2015" "0.1" "Tunir"
+.TH "TUNIR" "8" "February 11, 2015" "0.1" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -35,6 +35,23 @@ Tunir is a simple CI system. The goal is to have a system which is
 simple to setup, and easy to maintain.
 .sp
 Contents:
+.SH WHY ANOTHER CI?
+.sp
+I have used Jenkins before. I was maintaining one instance in one of my vps
+instance.  The amount of ram required by Jenkins was too much for my small vm.
+I can admit that I am not a great sys\-admin anyway.
+.sp
+As part of my daily job, I have to test the latest cloud images we build under
+Fedora project, while doing so I figured out that most of it can be automated
+if we have a system to create/maintain/terminate cloud instances. Of course I
+do not want any actual cloud, it will be a different monster to maintain.
+.sp
+This is the point where I came up with Tunir, this simple CI system will help
+me to do automated tests for the cloud images. I kept the system generic enough
+to execute any kind of tests people want.
+.sp
+The configuration is very bare minimal with Tunir. The only time you may have
+to do some real work, if you are using Docker containers to execute the test.
 .SH INSTALLATION
 .sp
 Tunir is written in Python. Currently it works with Python2.7+
@@ -77,7 +94,7 @@ You can install them in Fedora by the following command:
 .sp
 .nf
 .ft C
-$ sudo dnf install libguestfs\-tools python\-fabric python\-sqlalchemy docker\-io python\-redis redis
+$ sudo dnf install libguestfs\-tools python\-paramiko python\-sqlalchemy docker\-io python\-redis redis
 .ft P
 .fi
 .UNINDENT
@@ -264,6 +281,16 @@ $ sudo ./tunir \-\-job jobname \-\-stateless
 .fi
 .UNINDENT
 .UNINDENT
+.SS Docker jobs
+.sp
+Docker jobs requires some work on the Docker image you want run. We will have to use a Dockerfile, and make sure
+that sshd is running in that image. In case you are using a Debian based image, you will find the example in the
+official \fI\%Docker documentation\fP\&.
+.sp
+If you want to use Fedora/CentOS images, then you can use the example \fI\%Dockerfile\fP
+I wrote.
+.sp
+This way in all cases (vm, bare metal, or Docker containers) tunir will work in the same way.
 .INDENT 0.0
 .IP \(bu 2
 \fIgenindex\fP

@@ -66,6 +66,19 @@ def read_job_configuration(jobname='', config_dir='./'):
         data = json.load(fobj)
     return data
 
+def try_again(func):
+    "We will try again for ssh errors."
+    def wrapper(*args, **kargs):
+        try:
+            result = func(*args, **kargs)
+        except paramiko.ssh_exception.SSHException:
+            print "Getting ssh exception, sleeping for 30 seconds and then trying again."
+            time.sleep(30)
+            result = func(*args, **kargs)
+        return result
+    return wrapper
+
+@try_again
 def execute(config, command, container=None):
     """
     Executes a given command based on the system.

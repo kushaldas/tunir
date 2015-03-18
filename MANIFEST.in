@@ -7,3 +7,5 @@ include README.rst
 include MANIFEST.in
 include *.json
 include *.txt
+include LICENSE
+include COPYING

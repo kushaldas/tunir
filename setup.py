@@ -3,7 +3,7 @@
 from setuptools import find_packages, setup
 
 setup(name = 'tunir',
-    version = '0.3',
+    version = '0.4',
     description = "Simple CI system.",
     long_description = "A simple CI system which can be maintained.",
     platforms = ["Linux"],

@@ -62,6 +62,12 @@ user
 password
     The password of the given user. Right now for cloud VM(s) it is set to *passw0rd*.
 
+key
+    The path to the ssh key, the password value should be an empty string for this.
+
+port
+    The port number as string to connect. (Required for bare type system.)
+
 jobname.txt
 ------------
 

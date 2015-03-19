@@ -14,6 +14,7 @@ if __name__ == '__main__':
     parser.add_argument("--stateless", help="Do not store the result, just print it in the STDOUT.", action='store_true')
     parser.add_argument("--config-dir", help="Path to the directory where the job config and commands can be found.",
                         default='./')
+    parser.add_argument("--atomic", help="We are using an Atomic image.", action='store_true')
     args = parser.parse_args()
     if args.result and args.text:
         print text_result(args.result)

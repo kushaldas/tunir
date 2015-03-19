@@ -144,3 +144,9 @@ I wrote.
 
 This way in all cases (vm, bare metal, or Docker containers) tunir will work in the same way.
 
+
+Atomic images
+-------------
+
+In case you are using an Atomic image, you can pass the command line argument *--atomic*, that way Tunir will be
+able to boot the image properly in the local system.

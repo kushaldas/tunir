@@ -249,6 +249,9 @@ def main(args):
     port = None
     temp_d = None
     container = None
+    atomic = False
+    if args.atomic:
+        atomic = True
     if args.job:
         job_name = args.job
     else:
@@ -270,7 +273,7 @@ def main(args):
         os.system('chmod 0777 %s' % temp_d)
         os.mkdir(os.path.join(temp_d, 'meta'))
         vm = build_and_run(config['image'], config['ram'],
-                           graphics=True, vnc=False, atomic=False,
+                           graphics=True, vnc=False, atomic=atomic,
                            port=port, temppath=temp_d)
         job_pid = vm.pid # The pid to kill at the end
         # We should wait for a minute here
@@ -305,6 +308,7 @@ def startpoint():
     parser.add_argument("--stateless", help="Do not store the result, just print it in the STDOUT.", action='store_true')
     parser.add_argument("--config-dir", help="Path to the directory where the job config and commands can be found.",
                         default='./')
+    parser.add_argument("--atomic", help="We are using an Atomic image.", action='store_true')
     args = parser.parse_args()
     if args.result and args.text:
         print text_result(args.result)

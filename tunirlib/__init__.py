@@ -20,7 +20,7 @@ STR = OrderedDict()
 
 
 def run(host='127.0.0.1', port=22, user='root',
-                  password='passw0rd', command='/bin/true', bufsize=-1):
+                  password='passw0rd', command='/bin/true', bufsize=-1, key_filename=''):
     """
     Excecutes a command using paramiko and returns the result.
     :param host: Host to connect
@@ -28,13 +28,18 @@ def run(host='127.0.0.1', port=22, user='root',
     :param user: The username of the system
     :param password: User password
     :param command: The command to run
+    :param key_filename: SSH private key file.
     :return:
     """
     port = int(port)
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname=host, port=port,
+    if not key_filename:
+        client.connect(hostname=host, port=port,
                    username=user, password=password, banner_timeout=10)
+    else:
+        client.connect(hostname=host, port=port,
+                   username=user, key_filename=key_filename, banner_timeout=10)
     chan = client.get_transport().open_session()
     chan.settimeout(None)
     chan.set_combine_stderr(True)
@@ -91,12 +96,12 @@ def execute(config, command, container=None):
     if command.startswith('@@'):
         command = command[3:].strip()
         result = run(config['host_string'], config['port'], config['user'],
-                         config['password'], command)
+                         config['password'], command, key_filename=config.get('key', None))
         if result.return_code != 0:  # If the command does not fail, then it is a failure.
             negative = True
     else:
         result = run(config['host_string'], config['port'], config['user'],
-                        config['password'], command)
+                        config['password'], command, key_filename=config.get('key', None))
     return result, negative
 
 def update_result(result, session, job, command, negative, stateless):

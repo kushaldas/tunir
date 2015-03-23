@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "March 18, 2015" "0.4" "Tunir"
+.TH "TUNIR" "8" "March 23, 2015" "0.5" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -187,6 +187,12 @@ The username to connect to.
 .TP
 .B password
 The password of the given user. Right now for cloud VM(s) it is set to \fIpassw0rd\fP\&.
+.TP
+.B key
+The path to the ssh key, the password value should be an empty string for this.
+.TP
+.B port
+The port number as string to connect. (Required for bare type system.)
 .UNINDENT
 .SS jobname.txt
 .sp
@@ -291,6 +297,10 @@ If you want to use Fedora/CentOS images, then you can use the example \fI\%Docke
 I wrote.
 .sp
 This way in all cases (vm, bare metal, or Docker containers) tunir will work in the same way.
+.SS Atomic images
+.sp
+In case you are using an Atomic image, you can pass the command line argument \fI\-\-atomic\fP, that way Tunir will be
+able to boot the image properly in the local system.
 .INDENT 0.0
 .IP \(bu 2
 \fIgenindex\fP

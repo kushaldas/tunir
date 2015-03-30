@@ -94,6 +94,24 @@ The path of the database is configured in the tunirlib/default_config.py file. C
 .. note:: You do not need a database if you are only running stateless jobs.
 
 
+Example of configuration file to run the tests on a remote machine
+-------------------------------------------------------------------
+
+The configuration::
+
+    {
+      "name": "remotejob",
+      "type": "bare",
+      "image": "192.168.1.100",
+      "ram": 2048,
+      "user": "fedora",
+      "key": "/home/password/id_rsa"
+      "port": "22"
+    }
+
+
+
+
 Start a new job
 ---------------
 

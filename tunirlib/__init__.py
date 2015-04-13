@@ -96,12 +96,12 @@ def execute(config, command, container=None):
     if command.startswith('@@'):
         command = command[3:].strip()
         result = run(config['host_string'], config['port'], config['user'],
-                         config['password'], command, key_filename=config.get('key', None))
+                         config.get('password', None), command, key_filename=config.get('key', None))
         if result.return_code != 0:  # If the command does not fail, then it is a failure.
             negative = True
     else:
         result = run(config['host_string'], config['port'], config['user'],
-                        config['password'], command, key_filename=config.get('key', None))
+                        config.get('password', None), command, key_filename=config.get('key', None))
     return result, negative
 
 def update_result(result, session, job, command, negative, stateless):

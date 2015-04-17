@@ -95,12 +95,12 @@ def execute(config, command, container=None):
     negative = False
     if command.startswith('@@'):
         command = command[3:].strip()
-        result = run(config['host_string'], config['port'], config['user'],
+        result = run(config['host_string'], config.get('port', '22'), config['user'],
                          config.get('password', None), command, key_filename=config.get('key', None))
         if result.return_code != 0:  # If the command does not fail, then it is a failure.
             negative = True
     else:
-        result = run(config['host_string'], config['port'], config['user'],
+        result = run(config['host_string'], config.get('port', '22'), config['user'],
                         config.get('password', None), command, key_filename=config.get('key', None))
     return result, negative
 
@@ -192,7 +192,8 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
         elif config['type'] == 'docker':
             # Now we will convert this job as a bare metal :)
             config['type'] = 'bare'
-            config['port'] = int(container.port)
+            config['host_string'] = container.ip
+            time.sleep(10)
         for command in commands:
             negative = False
             result = ''

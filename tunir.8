@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "March 23, 2015" "0.5" "Tunir"
+.TH "TUNIR" "8" "April 17, 2015" "0.6" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -223,6 +223,27 @@ The path of the database is configured in the tunirlib/default_config.py file. C
 .INDENT 0.0
 .INDENT 3.5
 You do not need a database if you are only running stateless jobs.
+.UNINDENT
+.UNINDENT
+.SS Example of configuration file to run the tests on a remote machine
+.sp
+The configuration:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+{
+  "name": "remotejob",
+  "type": "bare",
+  "image": "192.168.1.100",
+  "ram": 2048,
+  "user": "fedora",
+  "key": "/home/password/id_rsa"
+  "port": "22"
+}
+.ft P
+.fi
 .UNINDENT
 .UNINDENT
 .SS Start a new job

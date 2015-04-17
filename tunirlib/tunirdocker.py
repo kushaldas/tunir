@@ -54,7 +54,7 @@ class Docker(object):
             return
         out, code = system('docker inspect %s' % self.cid)
         data = json.loads(out)
-        self.port  = data[0]['NetworkSettings']['Ports']['22/tcp'][0]['HostPort']
+        self.ip  = data[0]['NetworkSettings']['IPAddress']
 
     def rm(self):
         "Removes the current container."
@@ -67,5 +67,5 @@ class Docker(object):
 
 if __name__ == '__main__':
     d = Docker('kushaldas/ssh1')
-    print d.cid, d.port
+    print d.cid, d.ip
     d.rm()

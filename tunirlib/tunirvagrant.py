@@ -39,7 +39,7 @@ def parse_ssh_config(text):
     """
     result = {}
     lines = text.split('\n')
-    if lines[0].strip() == 'Host default':
+    if lines[0].strip().startswith('Host '):
         for line in lines[1:]:
             line = line.strip()
             words = line.split(' ')
@@ -53,7 +53,7 @@ class Vagrant(object):
     """
     Returns a Vagrant object.
     """
-    def __init__(self, image_url, name='tunir-box'):
+    def __init__(self, image_url, name='tunir-box', memory=1024):
         self.original_path = os.path.abspath(os.path.curdir)
         self.name = name
         self.image_url = image_url
@@ -63,9 +63,15 @@ class Vagrant(object):
 
         os.chdir(self.path)
         with open('Vagrantfile', 'w') as fobj:
-            fobj.write('''Vagrant.configure(2) do |config|
-  config.vm.box = "{0}"
-end'''.format(name))
+            fobj.write('''Vagrant.configure("2") do |config|
+  config.vm.define :tunirserver do |tunirserver|
+    tunirserver.vm.box = "{0}"
+    tunirserver.vm.provider :libvirt do |domain|
+      domain.memory = {1}
+      domain.cpus = 2
+    end
+  end
+end'''.format(name, memory))
 
         print "Wrote Vagrant config file."
         # Now actually register that image
@@ -130,7 +136,7 @@ def vagrant_and_run(config):
     :return: (Vagrant, config) config object with IP, and key file
     """
 
-    v = Vagrant(config['image'])
+    v = Vagrant(config['image'], config['ram'])
     if v.keys: # Means we have the box up, and also the ssh config
         config['host_string'] = v.keys['HostName']
         config['key'] = v.keys['IdentityFile']

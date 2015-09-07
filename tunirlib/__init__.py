@@ -186,7 +186,9 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
         else:
             print "Starting a stateless job."
 
-        config['host_string'] = '127.0.0.1'
+        if not 'host_string' in config: # For VM based tests.
+            config['host_string'] = '127.0.0.1'
+
         if config['type'] == 'vm':
             config['port'] = port
         elif config['type'] == 'bare':
@@ -291,7 +293,6 @@ def main(args):
 
     if config['type'] == 'vagrant':
         vagrant, config = vagrant_and_run(config)
-        print config
 
     try:
         run_job(args, jobpath, job_name, config, container, port)
@@ -307,8 +308,6 @@ def main(args):
         if vagrant:
             print "Removing the box."
             vagrant.destroy()
-            print vagrant.keys
-            print vagrant.path
         else:
             # FIXME!!!
             # Somehow the terminal is not echoing unless we do the line below.

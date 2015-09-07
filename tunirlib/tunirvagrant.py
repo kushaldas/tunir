@@ -77,6 +77,9 @@ end'''.format(name))
         cmd = 'vagrant box add {0} --name {1}'.format(image_url, name)
         out, err, retcode = system(cmd)
         # Now check for error, I will skip this.
+        if retcode != 0:
+            print("Error while trying to add the box.")
+            return
         print out
 
         print "Up the vagrant"
@@ -84,6 +87,9 @@ end'''.format(name))
         # Let us up the vagrant
         cmd = 'vagrant up'
         out, err, retcode = system(cmd)
+        if retcode != 0:
+            print("Error while trying to do vagrant up the box.")
+            return
         print out
 
         time.sleep(3)
@@ -93,6 +99,9 @@ end'''.format(name))
         # Now let us try to get the ssh-config
         cmd = 'vagrant ssh-config'
         out, err, retcode = system(cmd)
+        if retcode != 0:
+            print("Error while trying to get ssh config for the box.")
+            return
         print out
         self.keys = parse_ssh_config(out)
         os.chdir(self.original_path)
@@ -102,9 +111,15 @@ end'''.format(name))
         print "Let us destroy the box."
         cmd = 'vagrant destroy'
         out, err, retcode = system(cmd)
+        if retcode != 0:
+            print("Error while trying to destroy the instance.")
+            return
 
         cmd = 'vagrant box remove {0}'.format(self.name)
         out, err, retcode = system(cmd)
+        if retcode != 0:
+            print("Error while trying to remove the box.")
+            return
         os.chdir(self.original_path)
 
 def vagrant_and_run(config):
@@ -138,3 +153,4 @@ if __name__ == '__main__':
   LogLevel FATAL
 '''
     print parse_ssh_config(data)
+

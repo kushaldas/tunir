@@ -10,6 +10,7 @@ import shutil
 import paramiko
 from pprint import pprint
 from testvm import build_and_run
+from tunirvagrant import vagrant_and_run
 from tunirresult import download_result, text_result
 from tunirdb import add_job, create_session, add_result, update_job
 from default_config import DB_URL
@@ -38,6 +39,7 @@ def run(host='127.0.0.1', port=22, user='root',
         client.connect(hostname=host, port=port,
                    username=user, password=password, banner_timeout=10)
     else:
+        print host, port, user, key_filename
         client.connect(hostname=host, port=port,
                    username=user, key_filename=key_filename, banner_timeout=10)
     chan = client.get_transport().open_session()
@@ -159,7 +161,7 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
     :return: None
     """
     if not os.path.exists(jobpath):
-        print "Missing job file."
+        print "Missing job file {0}".format(jobpath)
         return
 
     # Now read the commands inside the job file
@@ -251,6 +253,7 @@ def main(args):
     temp_d = None
     container = None
     atomic = False
+    vagrant = None
     if args.atomic:
         atomic = True
     if args.job:
@@ -263,16 +266,19 @@ def main(args):
     if not config: # Bad config name
         sys.exit(-1)
 
+    if config['type'] in ['vm',]:
+        # Now we need a temporary directory
+        temp_d = tempfile.mkdtemp()
+        os.system('chmod 0777 %s' % temp_d)
+        os.mkdir(os.path.join(temp_d, 'meta'))
+
+
     if config['type'] == 'vm':
         # First get us the free port number from redis queue.
         port = get_port()
         if not port:
             print "No port found in the redis queue."
             return
-        # Now we need a temporary directory
-        temp_d = tempfile.mkdtemp()
-        os.system('chmod 0777 %s' % temp_d)
-        os.mkdir(os.path.join(temp_d, 'meta'))
         vm = build_and_run(config['image'], config['ram'],
                            graphics=True, vnc=False, atomic=atomic,
                            port=port, temppath=temp_d)
@@ -282,6 +288,10 @@ def main(args):
     if config['type'] == 'docker':
         container = Docker(config['image'])
     jobpath = os.path.join(args.config_dir, job_name + '.txt')
+
+    if config['type'] == 'vagrant':
+        vagrant, config = vagrant_and_run(config)
+        print config
 
     try:
         run_job(args, jobpath, job_name, config, container, port)
@@ -294,6 +304,11 @@ def main(args):
             return_port(port)
         if container:
             container.rm()
+        if vagrant:
+            print "Removing the box."
+            vagrant.destroy()
+            print vagrant.keys
+            print vagrant.path
         else:
             # FIXME!!!
             # Somehow the terminal is not echoing unless we do the line below.

@@ -12,8 +12,6 @@ from pprint import pprint
 from testvm import build_and_run
 from tunirvagrant import vagrant_and_run
 from tunirresult import download_result, text_result
-from tunirdb import add_job, create_session, add_result, update_job
-from default_config import DB_URL
 from tunirdocker import Docker, Result
 from collections import OrderedDict
 
@@ -106,12 +104,11 @@ def execute(config, command, container=None):
                         config.get('password', None), command, key_filename=config.get('key', None))
     return result, negative
 
-def update_result(result, session, job, command, negative, stateless):
+def update_result(result, command, negative):
     """
     Updates the result based on input.
 
     :param result: Output from the command
-    :param session: Database session command.
     :param job: Job object from model.
     :param command: Text command.
     :param negative: If it is a negative command, which is supposed to fail.
@@ -120,27 +117,21 @@ def update_result(result, session, job, command, negative, stateless):
     :return: Boolean, False if the job as whole is failed.
     """
     if negative:
-        if stateless: # For stateless
-            status = True
-            if result.return_code == 0:
-                status = False
-            d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
-                 'ret': result.return_code, 'status': status}
-            STR[command] = d
-        else:
-            add_result(session, job.id, command, unicode(result, encoding='utf-8', errors='replace'),
-                   result.return_code, status=True)
+        status = True
+        if result.return_code == 0:
+            status = False
+        d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
+             'ret': result.return_code, 'status': status}
+        STR[command] = d
+
     else:
-        if stateless: # For stateless
-            status = True
-            if result.return_code != 0:
-                status = False
-            d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
-                 'ret': result.return_code, 'status': status}
-            STR[command] = d
-        else:
-            add_result(session, job.id, command, unicode(result, encoding='utf-8', errors='replace'),
-                   result.return_code)
+        status = True
+        if result.return_code != 0:
+            status = False
+        d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
+             'ret': result.return_code, 'status': status}
+        STR[command] = d
+
     if result.return_code != 0 and not negative:
         # Save the error message and status as fail.
         return False
@@ -169,9 +160,6 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
     # the result too.
     commands = []
     status = True
-    session = None
-    if not args.stateless:
-        session = create_session(DB_URL)
 
     with open(jobpath) as fobj:
         commands = fobj.readlines()
@@ -179,12 +167,8 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
 
     try:
         job = None
-        if not args.stateless:
-            job = add_job(session, name=job_name, image=config['image'],
-                          ram=config.get('ram', 0), user=config.get('user', 'root'), password=config.get('password', 'none'))
-            print "Starting Job: %s" % job.id
-        else:
-            print "Starting a stateless job."
+
+        print "Starting a stateless job."
 
         if not 'host_string' in config: # For VM based tests.
             config['host_string'] = '127.0.0.1'
@@ -210,24 +194,21 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
             print "Executing command: %s" % command
 
             result, negative = execute(config, command)
-            status = update_result(result, session, job, command, negative, args.stateless)
+            status = update_result(result, command, negative)
             if not status:
                 break
 
         # If we are here, that means all commands ran successfully.
-        if status:
-            if not args.stateless:
-                update_job(session, job)
+
     finally:
         # Now for stateless jobs
-        if args.stateless:
-            print "\n\nJob status: %s\n\n" % status
+        print "\n\nJob status: %s\n\n" % status
 
-            for key, value in STR.iteritems():
-                print "command: %s" % value['command']
-                print "status: %s\n" % value['status']
-                print value['result']
-                print "\n"
+        for key, value in STR.iteritems():
+            print "command: %s" % value['command']
+            print "status: %s\n" % value['status']
+            print value['result']
+            print "\n"
 
 
 def get_port():
@@ -317,20 +298,12 @@ def main(args):
 def startpoint():
     parser = argparse.ArgumentParser()
     parser.add_argument("--job", help="The job configuration name to run")
-
-    parser.add_argument("--result", help="Gets the result file for the given job.")
-    parser.add_argument("--text", help="Print the result.", action='store_true')
     parser.add_argument("--stateless", help="Do not store the result, just print it in the STDOUT.", action='store_true')
     parser.add_argument("--config-dir", help="Path to the directory where the job config and commands can be found.",
                         default='./')
     parser.add_argument("--atomic", help="We are using an Atomic image.", action='store_true')
     args = parser.parse_args()
-    if args.result and args.text:
-        print text_result(args.result)
-        sys.exit(0)
-    elif args.result:
-        download_result(args.result)
-        sys.exit(0)
+
     main(args)
 
 if __name__ == '__main__':

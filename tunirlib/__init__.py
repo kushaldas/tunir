@@ -11,7 +11,6 @@ import paramiko
 from pprint import pprint
 from testvm import build_and_run
 from tunirvagrant import vagrant_and_run
-from tunirresult import download_result, text_result
 from tunirdocker import Docker, Result
 from collections import OrderedDict
 

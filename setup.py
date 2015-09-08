@@ -3,7 +3,7 @@
 from setuptools import find_packages, setup
 
 setup(name = 'tunir',
-    version = '0.6',
+    version = '0.7',
     description = "Simple CI system.",
     long_description = "A simple CI system which can be maintained.",
     platforms = ["Linux"],
@@ -14,7 +14,7 @@ setup(name = 'tunir',
     packages=find_packages(),
     data_files=[('share/tunir',
                   ['createports.py', 'default.json',
-                    'default.txt', 'dockerjob.json', 'dockerjob.txt', 'tunir.config']),
+                    'default.txt', 'vgt.json', 'vgt.txt']),
         ('share/man/man8/', ['tunir.8'])],
     entry_points = {
           'console_scripts': [

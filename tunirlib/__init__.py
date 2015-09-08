@@ -266,7 +266,7 @@ def main(args):
             return
         vm = build_and_run(config['image'], config['ram'],
                            graphics=True, vnc=False, atomic=atomic,
-                           port=port, temppath=temp_d)
+                           port=port, image_dir=temp_d)
         job_pid = vm.pid # The pid to kill at the end
         # We should wait for a minute here
         time.sleep(60)

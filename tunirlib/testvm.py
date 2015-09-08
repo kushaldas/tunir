@@ -218,14 +218,14 @@ def boot_image(
 
 
 def build_and_run(
-        image_url, ram=1024, graphics=False, vnc=False, atomic=False, port='', temppath='/tmp'):
+        image_url, ram=1024, graphics=False, vnc=False, atomic=False, port='', image_dir='/tmp'):
     """Run through all the steps."""
 
     print "cleaning and creating dirs..."
     clean_dirs()
     create_dirs()
 
-    base_path = temppath
+    base_path = image_dir
 
     # Create cloud-init data
     print "Creating meta-data..."
@@ -240,7 +240,7 @@ def build_and_run(
 
     if not os.path.isfile(image_file):
         print "downloading new image..."
-        image = koji_download([image_url], temppath)[0]
+        image = koji_download([image_url], image_dir)[0]
 
         if atomic:
                 expand_qcow(image)

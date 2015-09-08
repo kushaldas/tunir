@@ -1,0 +1,8 @@
+{
+  "name": "fedora",
+  "type": "vagrant",
+  "image": "/var/run/tunir/Fedora-Cloud-Atomic-Vagrant-22-20150521.x86_64.vagrant-libvirt.box",
+  "ram": 2048,
+  "user": "vagrant",
+  "port": "22"
+}

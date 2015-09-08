@@ -112,6 +112,14 @@ You can actually provide a path to tunir so that it can pick up job configuratio
     $ sudo ./tunir --job jobname --config-dir /etc/tunirjobs/
 
 
+Persistence for downloaded images
+---------------------------------
+
+To make images that are downloaded persist across runs of tunir and get reused then you can specify the image directory to save them in.::
+
+    $ sudo ./tunir --job jobname --image-dir /var/lib/tunirimages/
+
+
 Stateless jobs
 ---------------
 

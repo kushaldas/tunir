@@ -14,5 +14,4 @@ This is the point where I came up with Tunir, this simple CI system will help
 me to do automated tests for the cloud images. I kept the system generic enough
 to execute any kind of tests people want.
 
-The configuration is very bare minimal with Tunir. The only time you may have
-to do some real work, if you are using Docker containers to execute the test.
+The configuration is very bare minimal with Tunir.

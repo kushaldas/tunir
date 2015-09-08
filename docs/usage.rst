@@ -1,9 +1,8 @@
 Usage
 =====
 
-Tunir is a continuous integration (CI) system which can run a set of commands/tests in a
-new cloud VM, or bare metal, or in Docker containers based on the job configurations.
-It uses fabric project to connect to the vm or bare metal tests.
+Tunir is a mini continuous integration (CI) system which can run a set of commands/tests in a
+new cloud VM, or bare metal, or in Vagrant boxes based on the job configurations.
 
 The current version can be used along with cron to run at predefined times.
 
@@ -77,22 +76,6 @@ rebooting the system, you may want to use **SLEEP NUMBER_OF_SECONDS** command th
 If a command starts with @@ sign, it means the command is supposed to fail. Generally we check the return codes
 of the commands to find if it failed, or not. For Docker container based systems, we track the stderr output.
 
-Database path
--------------
-
-We get that value from a json configuration file named *tunir.config*, either in the current directory or 
-from under /etc. There is an example configuration in the source.
-
-Create the database schema
----------------------------
-::
-
-    $ python tunirlib/createdb.py
-
-The path of the database is configured in the tunirlib/default_config.py file. Currently it stays under /tmp.
-
-.. note:: You do not need a database if you are only running stateless jobs.
-
 
 Example of configuration file to run the tests on a remote machine
 -------------------------------------------------------------------
@@ -120,18 +103,6 @@ Start a new job
     $ sudo ./tunir --job jobname
 
 
-Find the result from a job
---------------------------
-
-::
-
-    $ ./tunir --result JOB_ID
-
-The above command will create a file *result-JOB_ID.txt* in the current directory. It will overwrite any file (if exits).
-In case you want to just print the result on the console use the following command.::
-
-    $ ./tunir --result JOB_ID --text
-
 
 Job configuration directory
 ----------------------------
@@ -144,27 +115,35 @@ You can actually provide a path to tunir so that it can pick up job configuratio
 Stateless jobs
 ---------------
 
+.. note:: Now all jobs are by default stateless.
+
 You can run a job as stateless, which does not require any database. This will print the result at the end of the
 run.::
 
     $ sudo ./tunir --job jobname --stateless
 
 
-Docker jobs
--------------
-
-Docker jobs requires some work on the Docker image you want run. We will have to use a Dockerfile, and make sure
-that sshd is running in that image. In case you are using a Debian based image, you will find the example in the
-official `Docker documentation <https://docs.docker.com/examples/running_ssh_service/>`_.
-
-If you want to use Fedora/CentOS images, then you can use the example `Dockerfile <https://kushal.fedorapeople.org/docker-ssh/>`_ 
-I wrote.
-
-This way in all cases (vm, bare metal, or Docker containers) tunir will work in the same way.
-
-
 Atomic images
 -------------
 
-In case you are using an Atomic image, you can pass the command line argument *--atomic*, that way Tunir will be
+In case you are using an Atomic image in vm, you can pass the command line argument *--atomic*, that way Tunir will be
 able to boot the image properly in the local system.
+
+Vagrant Boxes
+--------------
+
+From tunir 0.7 release we can test using Vagrant boxes too. We are using vagrant-libvirt for this. The following is an example
+job file with a vagrant box.
+
+::
+
+    {
+      "name": "fedora",
+      "type": "vagrant",
+      "image": "/var/run/tunir/Fedora-Cloud-Atomic-Vagrant-22-20150521.x86_64.vagrant-libvirt.box",
+      "ram": 2048,
+      "user": "vagrant",
+      "port": "22"
+    }
+
+

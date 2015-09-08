@@ -148,11 +148,11 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
     :param config: Configuration of the given job
     :param container: Docker object for a Docker job.
     :param port: The port number to connect in case of a vm.
-    :return: None
+    :return: Status of the job in boolean
     """
     if not os.path.exists(jobpath):
         print "Missing job file {0}".format(jobpath)
-        return
+        return False
 
     # Now read the commands inside the job file
     # and execute them one by one, we need to save
@@ -209,6 +209,8 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
             print value['result']
             print "\n"
 
+        return status
+
 
 def get_port():
     "Gets the latest port from redis queue."
@@ -236,6 +238,7 @@ def main(args):
     container = None
     atomic = False
     vagrant = None
+    return_code = -100
     if args.atomic:
         atomic = True
     if args.job:
@@ -275,7 +278,9 @@ def main(args):
         vagrant, config = vagrant_and_run(config)
 
     try:
-        run_job(args, jobpath, job_name, config, container, port)
+        status = run_job(args, jobpath, job_name, config, container, port)
+        if status:
+            return_code = 0
     finally:
         # Now let us kill the kvm process
         if vm:
@@ -292,6 +297,7 @@ def main(args):
             # FIXME!!!
             # Somehow the terminal is not echoing unless we do the line below.
             os.system('stty sane')
+        sys.exit(return_code)
 
 
 def startpoint():

@@ -237,6 +237,7 @@ def main(args):
     temp_d = None
     container = None
     atomic = False
+    image_dir = ''
     vagrant = None
     return_code = -100
     if args.atomic:
@@ -252,10 +253,21 @@ def main(args):
         sys.exit(-1)
 
     if config['type'] in ['vm',]:
-        # Now we need a temporary directory
-        temp_d = tempfile.mkdtemp()
-        os.system('chmod 0777 %s' % temp_d)
-        os.mkdir(os.path.join(temp_d, 'meta'))
+        # If there is an image_dir then use that, else we need to
+        # create a temp directory to store the image in
+        if args.image_dir:
+            image_dir = args.image_dir
+        else:
+            temp_d = tempfile.mkdtemp()
+            image_dir = temp_d
+        # If the image_dir is not yet created lets create it
+        if not os.path.exists(image_dir):
+            os.mkdir(image_dir)
+        # Create the supporting meta directory if it doesn't exist
+        if not os.path.exists(os.path.join(image_dir, 'meta')):
+            os.mkdir(os.path.join(image_dir, 'meta'))
+        # Update perms on directory
+        os.system('chmod 0777 %s' % image_dir)
 
 
     if config['type'] == 'vm':
@@ -266,7 +278,7 @@ def main(args):
             return
         vm = build_and_run(config['image'], config['ram'],
                            graphics=True, vnc=False, atomic=atomic,
-                           port=port, image_dir=temp_d)
+                           port=port, image_dir=image_dir)
         job_pid = vm.pid # The pid to kill at the end
         # We should wait for a minute here
         time.sleep(60)
@@ -306,6 +318,7 @@ def startpoint():
     parser.add_argument("--stateless", help="Do not store the result, just print it in the STDOUT.", action='store_true')
     parser.add_argument("--config-dir", help="Path to the directory where the job config and commands can be found.",
                         default='./')
+    parser.add_argument("--image-dir", help="Path to the directory where vm images will be held")
     parser.add_argument("--atomic", help="We are using an Atomic image.", action='store_true')
     args = parser.parse_args()
 

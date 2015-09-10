@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "September 08, 2015" "0.6" "Tunir"
+.TH "TUNIR" "8" "September 10, 2015" "0.6" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -240,6 +240,19 @@ You can actually provide a path to tunir so that it can pick up job configuratio
 .nf
 .ft C
 $ sudo ./tunir \-\-job jobname \-\-config\-dir /etc/tunirjobs/
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Persistence for downloaded images
+.sp
+To make images that are downloaded persist across runs of tunir and get reused then you can specify the image directory to save them in.:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo ./tunir \-\-job jobname \-\-image\-dir /var/lib/tunirimages/
 .ft P
 .fi
 .UNINDENT

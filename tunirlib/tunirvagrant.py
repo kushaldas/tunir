@@ -59,6 +59,7 @@ class Vagrant(object):
         self.image_url = image_url
         self.path = '/var/run/tunir/'
         self.keys = None
+        self.failed = False
 
 
         os.chdir(self.path)
@@ -85,6 +86,7 @@ end'''.format(name, memory))
         # Now check for error, I will skip this.
         if retcode != 0:
             print("Error while trying to add the box.")
+            self.failed = True
             return
         print out
 
@@ -95,6 +97,7 @@ end'''.format(name, memory))
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to do vagrant up the box.")
+            self.failed = True
             return
         print out
 
@@ -107,6 +110,7 @@ end'''.format(name, memory))
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to get ssh config for the box.")
+            self.failed = True
             return
         print out
         self.keys = parse_ssh_config(out)
@@ -119,7 +123,6 @@ end'''.format(name, memory))
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to destroy the instance.")
-            return
 
         cmd = 'vagrant box remove {0}'.format(self.name)
         out, err, retcode = system(cmd)
@@ -136,7 +139,7 @@ def vagrant_and_run(config):
     :return: (Vagrant, config) config object with IP, and key file
     """
 
-    v = Vagrant(config['image'], config['ram'])
+    v = Vagrant(config['image'], memory=config['ram'])
     if v.keys: # Means we have the box up, and also the ssh config
         config['host_string'] = v.keys['HostName']
         config['key'] = v.keys['IdentityFile']

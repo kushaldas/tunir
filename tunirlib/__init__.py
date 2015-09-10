@@ -240,6 +240,7 @@ def main(args):
     image_dir = ''
     vagrant = None
     return_code = -100
+    run_job_flag = True
     if args.atomic:
         atomic = True
     if args.job:
@@ -288,11 +289,14 @@ def main(args):
 
     if config['type'] == 'vagrant':
         vagrant, config = vagrant_and_run(config)
+        if vagrant.failed:
+            run_job_flag = False
 
     try:
-        status = run_job(args, jobpath, job_name, config, container, port)
-        if status:
-            return_code = 0
+        if run_job_flag:
+            status = run_job(args, jobpath, job_name, config, container, port)
+            if status:
+                return_code = 0
     finally:
         # Now let us kill the kvm process
         if vm:

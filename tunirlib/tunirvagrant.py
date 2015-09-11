@@ -33,6 +33,20 @@ def system(cmd):
     returncode = ret.returncode
     return out, err, returncode
 
+def refresh_vol_pool():
+    '''Refreshes libvirt volume by removing extra files..
+
+    '''
+    out, err, retcode = system('virsh vol-list default')
+    lines = out.split('\n')
+    if len(lines) > 2:
+        for line in lines[2:]:
+            words = line.split()
+            if len(words) == 2:
+                if words[0].startswith('tunir-box'):
+                    system('virsh vol-delete {0} default'.format(words[0]))
+
+
 def parse_ssh_config(text):
     """
     Parses the SSH config and returns a dict
@@ -126,12 +140,15 @@ end'''.format(name, memory))
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to destroy the instance.")
+            print err
 
         cmd = 'vagrant box remove {0}'.format(self.name)
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to remove the box.")
-            return
+            print err
+
+        refresh_vol_pool() # Remove libvirt cache
         os.chdir(self.original_path)
 
 def vagrant_and_run(config):

@@ -86,6 +86,7 @@ end'''.format(name, memory))
         # Now check for error, I will skip this.
         if retcode != 0:
             print("Error while trying to add the box.")
+            print err
             self.failed = True
             return
         print out
@@ -97,6 +98,7 @@ end'''.format(name, memory))
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to do vagrant up the box.")
+            print err
             self.failed = True
             return
         print out
@@ -110,6 +112,7 @@ end'''.format(name, memory))
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to get ssh config for the box.")
+            print err
             self.failed = True
             return
         print out

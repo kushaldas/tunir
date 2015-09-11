@@ -192,9 +192,13 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 continue
             print "Executing command: %s" % command
 
-            result, negative = execute(config, command)
-            status = update_result(result, command, negative)
-            if not status:
+            try:
+                result, negative = execute(config, command)
+                status = update_result(result, command, negative)
+                if not status:
+                    break
+            except: #execute failed second time
+                status = False
                 break
 
         # If we are here, that means all commands ran successfully.

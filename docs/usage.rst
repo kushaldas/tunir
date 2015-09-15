@@ -137,21 +137,5 @@ Atomic images
 In case you are using an Atomic image in vm, you can pass the command line argument *--atomic*, that way Tunir will be
 able to boot the image properly in the local system.
 
-Vagrant Boxes
---------------
-
-From tunir 0.7 release we can test using Vagrant boxes too. We are using vagrant-libvirt for this. The following is an example
-job file with a vagrant box.
-
-::
-
-    {
-      "name": "fedora",
-      "type": "vagrant",
-      "image": "/var/run/tunir/Fedora-Cloud-Atomic-Vagrant-22-20150521.x86_64.vagrant-libvirt.box",
-      "ram": 2048,
-      "user": "vagrant",
-      "port": "22"
-    }
 
 

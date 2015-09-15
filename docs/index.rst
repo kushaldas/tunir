@@ -17,6 +17,7 @@ Contents:
    why
    installation
    usage
+   vagrant
 
 
 Indices and tables

@@ -32,3 +32,35 @@ Now try using `--provider` option with vagrant command like
 ::
 
     # vagrant up --provider virtualbox
+
+
+Example of a libvirt based job file
+------------------------------------
+
+::
+
+    {
+      "name": "fedora",
+      "type": "vagrant",
+      "image": "/var/run/tunir/Fedora-Cloud-Atomic-Vagrant-22-20150521.x86_64.vagrant-libvirt.box",
+      "ram": 2048,
+      "user": "vagrant",
+      "port": "22"
+    }
+
+Example of a Virtualbox based job file
+--------------------------------------
+
+::
+
+    {
+      "name": "fedora",
+      "type": "vagrant",
+      "image": "/var/run/tunir/Fedora-Cloud-Atomic-Vagrant-22-20150521.x86_64.vagrant-virtualbox.box",
+      "ram": 2048,
+      "user": "vagrant",
+      "port": "22",
+      "provider": "virtualbox"
+    }
+
+.. note:: We have a special key provider in the config for Virtualbox based jobs.

@@ -5,7 +5,7 @@ Using Vagrant jobs
 development systems. Now from tunir 0.7 we can use Vagrant boxes to test. In Fedora, we can have two
 different kind of vagrant provider, libvirt, and virtualbox.
 
-.. note:: The same box can not have both libvirt and virtualbox.
+.. note:: The same host can not have both libvirt and virtualbox.
 
 How to install vagrant-libvirt?
 --------------------------------

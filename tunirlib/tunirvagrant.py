@@ -100,11 +100,11 @@ end'''
         if self.provider == 'libvirt':
             self.vagrantfile = libvirt_config
         else:
-            vagrantfile = virtualbox_config
+            self.vagrantfile = virtualbox_config
         os.chdir(self.path)
 
         with open('Vagrantfile', 'w') as fobj:
-            fobj.write(vagrantfile.format(name, memory))
+            fobj.write(self.vagrantfile.format(name, memory))
 
         print "Wrote Vagrant config file."
         # Now actually register that image

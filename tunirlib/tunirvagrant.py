@@ -154,13 +154,13 @@ end'''
     def destroy(self):
         os.chdir(self.path)
         print "Let us destroy the box."
-        cmd = 'vagrant destroy'
+        cmd = 'vagrant destroy -f'
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to destroy the instance.")
             print err
 
-        cmd = 'vagrant box remove {0}'.format(self.name)
+        cmd = 'vagrant box remove {0} -f'.format(self.name)
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to remove the box.")

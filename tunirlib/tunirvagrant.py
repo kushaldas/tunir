@@ -166,6 +166,7 @@ def vagrant_and_run(config):
     if v.keys: # Means we have the box up, and also the ssh config
         config['host_string'] = v.keys['HostName']
         config['key'] = v.keys['IdentityFile']
+        config['port'] = v.keys['Port']
 
     return v, config
 

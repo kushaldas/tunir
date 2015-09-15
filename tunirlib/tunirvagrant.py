@@ -76,10 +76,7 @@ class Vagrant(object):
         self.failed = False
         self.provider = provider
 
-
-        os.chdir(self.path)
-        with open('Vagrantfile', 'w') as fobj:
-            fobj.write('''Vagrant.configure("2") do |config|
+        libvirt_config = '''Vagrant.configure("2") do |config|
   config.vm.define :tunirserver do |tunirserver|
     tunirserver.vm.box = "{0}"
     tunirserver.vm.provider :libvirt do |domain|
@@ -87,7 +84,27 @@ class Vagrant(object):
       domain.cpus = 2
     end
   end
-end'''.format(name, memory))
+end'''
+
+        virtualbox_config = '''Vagrant.configure("2") do |config|
+  config.vm.box = "{0}"
+  config.vm.synced_folder ".", "/home/vagrant/sync", disabled: true
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.provider :virtualbox do |domain|
+      domain.memory = {1}
+      domain.cpus = 2
+  end
+end'''
+
+        self.vagrantfile = None
+        if self.provider == 'libvirt':
+            self.vagrantfile = libvirt_config
+        else:
+            vagrantfile = virtualbox_config
+        os.chdir(self.path)
+
+        with open('Vagrantfile', 'w') as fobj:
+            fobj.write(vagrantfile.format(name, memory))
 
         print "Wrote Vagrant config file."
         # Now actually register that image

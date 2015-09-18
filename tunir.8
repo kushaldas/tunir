@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "September 10, 2015" "0.6" "Tunir"
+.TH "TUNIR" "8" "September 18, 2015" "0.6" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -282,10 +282,62 @@ $ sudo ./tunir \-\-job jobname \-\-stateless
 .sp
 In case you are using an Atomic image in vm, you can pass the command line argument \fI\-\-atomic\fP, that way Tunir will be
 able to boot the image properly in the local system.
-.SS Vagrant Boxes
+.SH USING VAGRANT JOBS
 .sp
-From tunir 0.7 release we can test using Vagrant boxes too. We are using vagrant\-libvirt for this. The following is an example
-job file with a vagrant box.
+\fI\%Vagrant\fP is a very well known system among developers for creating lightweight
+development systems. Now from tunir 0.7 we can use Vagrant boxes to test. In Fedora, we can have two
+different kind of vagrant provider, libvirt, and virtualbox.
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+The same host can not have both libvirt and virtualbox.
+.UNINDENT
+.UNINDENT
+.SS How to install vagrant\-libvirt?
+.sp
+Just do
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+# dnf install vagrant\-libvirt
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The above command will pull in all the required dependencies.
+.SS How to install Virtualbox and vagrant?
+.sp
+Configure required virtualbox repo
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+# curl http://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo > /etc/yum.repos.d/virtualbox.repo
+# dnf install VirtualBox\-4.3 kernel\-devel vagrant \-y
+# dnf install kernel\-devel \-y
+# /etc/init.d/vboxdrv setup
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Now try using \fI\-\-provider\fP option with vagrant command like
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+# vagrant up \-\-provider virtualbox
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Example of a libvirt based job file
 .INDENT 0.0
 .INDENT 3.5
 .sp
@@ -301,6 +353,32 @@ job file with a vagrant box.
 }
 .ft P
 .fi
+.UNINDENT
+.UNINDENT
+.SS Example of a Virtualbox based job file
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+{
+  "name": "fedora",
+  "type": "vagrant",
+  "image": "/var/run/tunir/Fedora\-Cloud\-Atomic\-Vagrant\-22\-20150521.x86_64.vagrant\-virtualbox.box",
+  "ram": 2048,
+  "user": "vagrant",
+  "port": "22",
+  "provider": "virtualbox"
+}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+We have a special key provider in the config for Virtualbox based jobs.
 .UNINDENT
 .UNINDENT
 .INDENT 0.0

@@ -26,8 +26,8 @@ Configure required virtualbox repo
 ::
 
     # curl http://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo > /etc/yum.repos.d/virtualbox.repo
-    # dnf install VirtualBox-4.3 kernel-devel vagrant -y
-    # dnf install kernel-devel -y
+    # dnf install VirtualBox-4.3  vagrant -y
+    # dnf install kernel-devel gcc -y
     # /etc/init.d/vboxdrv setup
 
 Now try using `--provider` option with vagrant command like

@@ -292,6 +292,7 @@ def main(args):
     jobpath = os.path.join(args.config_dir, job_name + '.txt')
 
     if config['type'] == 'vagrant':
+        os.system('mkdir -p /var/run/tunir')
         vagrant, config = vagrant_and_run(config)
         if vagrant.failed:
             run_job_flag = False

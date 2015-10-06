@@ -4,7 +4,9 @@ Usage
 Tunir is a mini continuous integration (CI) system which can run a set of commands/tests in a
 new cloud VM, or bare metal, or in Vagrant boxes based on the job configurations.
 
-The current version can be used along with cron to run at predefined times.
+The current version can be used along with cron to run at predefined times. Tunir prints
+the output in the terminal, it also saves each command it ran, and the output in a text
+file located at '/var/run/tunir/tunir_results.txt'.
 
 Enabling a queue of ports for the VMs
 -------------------------------------

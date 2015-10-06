@@ -59,14 +59,6 @@ def koji_download(urls, download_path):
                     bytes_downloaded += len(buff)
                     f.write(buff)
                     bytes_remaining = float(bytes_downloaded) / file_size
-                    if config.DOWNLOAD_PROGRESS:
-                        # TODO: Improve this progress indicator by making
-                        # it more readable and user-friendly.
-                        status = r"{0} [{1:.2%}]".format(bytes_downloaded,
-                                                         bytes_remaining)
-                        status = status + chr(8) * (len(status) + 1)
-                        sys.stdout.write(status)
-
             return raw_files
 
         except OSError:

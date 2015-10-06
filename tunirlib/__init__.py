@@ -7,6 +7,7 @@ import signal
 import argparse
 import tempfile
 import shutil
+import codecs
 import paramiko
 from pprint import pprint
 from testvm import build_and_run
@@ -207,11 +208,17 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
         # Now for stateless jobs
         print "\n\nJob status: %s\n\n" % status
 
-        for key, value in STR.iteritems():
-            print "command: %s" % value['command']
-            print "status: %s\n" % value['status']
-            print value['result']
-            print "\n"
+        with codecs.open('/var/run/tunir/tunir_result.txt', 'w', encoding='utf-8') as fobj:
+            for key, value in STR.iteritems():
+                fobj.write("command: %s\n" % value['command'])
+                print "command: %s" % value['command']
+                fobj.write("status: %s\n" % value['status'])
+                print "status: %s\n" % value['status']
+                fobj.write(value['result'])
+                print value['result']
+                fobj.write("\n")
+                print "\n"
+
 
         return status
 
@@ -257,6 +264,7 @@ def main(args):
     if not config: # Bad config name
         sys.exit(-1)
 
+    os.system('mkdir -p /var/run/tunir')
     if config['type'] in ['vm',]:
         # If there is an image_dir then use that, else we need to
         # create a temp directory to store the image in
@@ -292,7 +300,6 @@ def main(args):
     jobpath = os.path.join(args.config_dir, job_name + '.txt')
 
     if config['type'] == 'vagrant':
-        os.system('mkdir -p /var/run/tunir')
         vagrant, config = vagrant_and_run(config)
         if vagrant.failed:
             run_job_flag = False

@@ -15,6 +15,4 @@ ATOMIC_USER_DATA = """#cloud-config
 password: %s
 chpasswd: { expire: False }
 ssh_pwauth: True
-runcmd:
-  - [ sh, -c, 'echo -e "ROOT_SIZE=4G\nDATA_SIZE=10G" > /etc/sysconfig/docker-storage-setup']
 """ 

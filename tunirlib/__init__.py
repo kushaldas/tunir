@@ -89,16 +89,21 @@ def execute(config, command, container=None):
     Executes a given command based on the system.
     :param config: Configuration dictionary.
     :param command: The command to execute
-    :return: (Output text, boolean)
+    :return: (Output text, string)
     """
     result = ''
-    negative = False
+    negative = 'no'
     if command.startswith('@@'):
         command = command[3:].strip()
         result = run(config['host_string'], config.get('port', '22'), config['user'],
                          config.get('password', None), command, key_filename=config.get('key', None))
         if result.return_code != 0:  # If the command does not fail, then it is a failure.
-            negative = True
+            negative = 'yes'
+    if command.startswith('##'):
+        command = command[3:].strip()
+        result = run(config['host_string'], config.get('port', '22'), config['user'],
+                         config.get('password', None), command, key_filename=config.get('key', None))
+        negative = 'dontcare'
     else:
         result = run(config['host_string'], config.get('port', '22'), config['user'],
                         config.get('password', None), command, key_filename=config.get('key', None))
@@ -116,23 +121,20 @@ def update_result(result, command, negative):
 
     :return: Boolean, False if the job as whole is failed.
     """
-    if negative:
-        status = True
+    status = True
+    if negative == 'yes':
         if result.return_code == 0:
             status = False
-        d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
-             'ret': result.return_code, 'status': status}
-        STR[command] = d
-
     else:
-        status = True
         if result.return_code != 0:
             status = False
-        d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
-             'ret': result.return_code, 'status': status}
-        STR[command] = d
 
-    if result.return_code != 0 and not negative:
+    d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
+         'ret': result.return_code, 'status': status}
+    STR[command] = d
+
+
+    if result.return_code != 0 and negative == 'no':
         # Save the error message and status as fail.
         return False
 
@@ -207,19 +209,33 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
     finally:
         # Now for stateless jobs
         print "\n\nJob status: %s\n\n" % status
+        nongating = {'number':0, 'pass':0, 'fail':0}
 
         with codecs.open('/var/run/tunir/tunir_result.txt', 'w', encoding='utf-8') as fobj:
             for key, value in STR.iteritems():
                 fobj.write("command: %s\n" % value['command'])
                 print "command: %s" % value['command']
+                if value['command'].startswith('##'):
+                    nongating['number'] += 1
+                    if value['status'] == False:
+                        nongating['fail'] += 1
+                    else:
+                        nongating['pass'] += 1
                 fobj.write("status: %s\n" % value['status'])
                 print "status: %s\n" % value['status']
                 fobj.write(value['result'])
                 print value['result']
                 fobj.write("\n")
                 print "\n"
-
-
+            fobj.write("\n\n")
+            print "\n\n"
+            msg = """Non gating tests status:
+Total:{0}
+Passed:{1}
+Failed:{2}""".format(nongating['number'], nongating['pass'],
+                nongating['fail'])
+            fobj.write(msg)
+            print msg
         return status
 
 

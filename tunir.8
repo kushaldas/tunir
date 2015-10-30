@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "September 18, 2015" "0.6" "Tunir"
+.TH "TUNIR" "8" "October 30, 2015" "0.10" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -31,26 +31,26 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
 .sp
-Tunir is a simple CI system. The goal is to have a system which is
+Tunir is a simple continuous integration (CI) system. The goal is to have a system which is
 simple to setup, and easy to maintain.
 .sp
 Contents:
 .SH WHY ANOTHER CI?
 .sp
-I have used Jenkins before. I was maintaining one instance in one of my vps
-instance.  The amount of ram required by Jenkins was too much for my small vm.
+I have used Jenkins before. I was maintaining one instance in one of my VPS
+instance.  The amount of RAM required by Jenkins was too much for my small VM.
 I can admit that I am not a great sys\-admin anyway.
 .sp
 As part of my daily job, I have to test the latest cloud images we build under
-Fedora project, while doing so I figured out that most of it can be automated
+Fedora project. While doing so, I figured out that most of it can be automated
 if we have a system to create/maintain/terminate cloud instances. Of course I
 do not want any actual cloud, it will be a different monster to maintain.
 .sp
-This is the point where I came up with Tunir, this simple CI system will help
-me to do automated tests for the cloud images. I kept the system generic enough
+This is the point where I came up with Tunir. Tunir is a simple continuous integration (CI) system that will help
+me run automated tests for the cloud images. I kept the system generic enough
 to execute any kind of tests people want.
 .sp
-The configuration is very bare minimal with Tunir.
+The configuration is very minimal with Tunir.
 .SH INSTALLATION
 .sp
 Tunir is written in Python. Currently it works with Python2.7+
@@ -115,7 +115,9 @@ $ sudo service redis start
 Tunir is a mini continuous integration (CI) system which can run a set of commands/tests in a
 new cloud VM, or bare metal, or in Vagrant boxes based on the job configurations.
 .sp
-The current version can be used along with cron to run at predefined times.
+The current version can be used along with cron to run at predefined times. Tunir prints
+the output in the terminal, it also saves each command it ran, and the output in a text
+file located at \(aq/var/run/tunir/tunir_results.txt\(aq.
 .SS Enabling a queue of ports for the VMs
 .sp
 We maintain a queue of available ports in the local system, which will be used to create
@@ -199,6 +201,29 @@ rebooting the system, you may want to use \fBSLEEP NUMBER_OF_SECONDS\fP command 
 .sp
 If a command starts with @@ sign, it means the command is supposed to fail. Generally we check the return codes
 of the commands to find if it failed, or not. For Docker container based systems, we track the stderr output.
+.sp
+We can also have non\-gating tests, means these tests can pass or fail, but the whole job status will depend
+on other gating tests. Any command in jobname.txt starting with ## sign will mark the test as non\-gating.
+.sp
+Example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+## curl \-O https://kushal.fedorapeople.org/tunirtests.tar.gziii
+ls /
+## foobar
+## ls /root
+##  sudo ls /root
+date
+@@ sudo reboot
+SLEEP 40
+ls /etc
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
 .SS Example of configuration file to run the tests on a remote machine
 .sp
 The configuration:
@@ -288,10 +313,17 @@ able to boot the image properly in the local system.
 development systems. Now from tunir 0.7 we can use Vagrant boxes to test. In Fedora, we can have two
 different kind of vagrant provider, libvirt, and virtualbox.
 .sp
-\fBNOTE:\fP
+\fBWARNING:\fP
 .INDENT 0.0
 .INDENT 3.5
 The same host can not have both libvirt and virtualbox.
+.UNINDENT
+.UNINDENT
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+Please create /var/run/tunir directory before running vagrant jobs.
 .UNINDENT
 .UNINDENT
 .SS How to install vagrant\-libvirt?
@@ -318,8 +350,8 @@ Configure required virtualbox repo
 .nf
 .ft C
 # curl http://download.virtualbox.org/virtualbox/rpm/fedora/virtualbox.repo > /etc/yum.repos.d/virtualbox.repo
-# dnf install VirtualBox\-4.3 kernel\-devel vagrant \-y
-# dnf install kernel\-devel \-y
+# dnf install VirtualBox\-4.3  vagrant \-y
+# dnf install kernel\-devel gcc \-y
 # /etc/init.d/vboxdrv setup
 .ft P
 .fi

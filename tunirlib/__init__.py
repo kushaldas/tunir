@@ -19,7 +19,8 @@ STR = OrderedDict()
 
 
 def run(host='127.0.0.1', port=22, user='root',
-                  password='passw0rd', command='/bin/true', bufsize=-1, key_filename=''):
+                  password='passw0rd', command='/bin/true', bufsize=-1, key_filename='',
+                  timeout=120):
     """
     Excecutes a command using paramiko and returns the result.
     :param host: Host to connect
@@ -41,7 +42,7 @@ def run(host='127.0.0.1', port=22, user='root',
         client.connect(hostname=host, port=port,
                    username=user, key_filename=key_filename, banner_timeout=10)
     chan = client.get_transport().open_session()
-    chan.settimeout(None)
+    chan.settimeout(timeout)
     chan.set_combine_stderr(True)
     chan.exec_command(command)
     stdout = chan.makefile('r', bufsize)
@@ -96,17 +97,20 @@ def execute(config, command, container=None):
     if command.startswith('@@'):
         command = command[3:].strip()
         result = run(config['host_string'], config.get('port', '22'), config['user'],
-                         config.get('password', None), command, key_filename=config.get('key', None))
+                         config.get('password', None), command, key_filename=config.get('key', None),
+                         timeout=config.get('timeout', 600))
         if result.return_code != 0:  # If the command does not fail, then it is a failure.
             negative = 'yes'
     if command.startswith('##'):
         command = command[3:].strip()
         result = run(config['host_string'], config.get('port', '22'), config['user'],
-                         config.get('password', None), command, key_filename=config.get('key', None))
+                         config.get('password', None), command, key_filename=config.get('key', None),
+                         timeout=config.get('timeout', 600))
         negative = 'dontcare'
     else:
         result = run(config['host_string'], config.get('port', '22'), config['user'],
-                        config.get('password', None), command, key_filename=config.get('key', None))
+                         config.get('password', None), command, key_filename=config.get('key', None),
+                         timeout=config.get('timeout', 600))
     return result, negative
 
 def update_result(result, command, negative):
@@ -162,6 +166,7 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
     # the result too.
     commands = []
     status = True
+    timeout_issue = False
 
     with open(jobpath) as fobj:
         commands = fobj.readlines()
@@ -200,6 +205,10 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 status = update_result(result, command, negative)
                 if not status:
                     break
+            except socket.timeout: # We have a timeout in the command
+                status = False
+                timeout_issue = True
+                break
             except: #execute failed second time
                 status = False
                 break
@@ -227,6 +236,10 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 print value['result']
                 fobj.write("\n")
                 print "\n"
+            if timeout_issue: # We have 10 minutes timeout in the last command.
+                msg = "Error: We have socket timeout in the last command."
+                fobj.write(msg)
+                print msg
             fobj.write("\n\n")
             print "\n\n"
             msg = """Non gating tests status:

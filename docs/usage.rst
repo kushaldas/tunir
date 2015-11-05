@@ -155,5 +155,23 @@ Atomic images
 In case you are using an Atomic image in vm, you can pass the command line argument *--atomic*, that way Tunir will be
 able to boot the image properly in the local system.
 
+Timeout issue
+--------------
+
+In case if one of the command fails to return within 10 minutes (600 seconds),
+tunir will fail the job with a timeout error. It will be marked at the end of
+the results. You can change the default value in the config file with a timeout
+key. In the below example I am having 300 seconds as timeout for each command.::
+
+     {
+      "name": "jobname",
+      "type": "vm",
+      "image": "file:///home/vms/Fedora-Cloud-Base-20141203-21.x86_64.qcow2",
+      "ram": 2048,
+      "user": "fedora",
+      "password": "passw0rd",
+      "timeout": 300
+
+    }
 
 

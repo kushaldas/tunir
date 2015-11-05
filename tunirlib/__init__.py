@@ -9,6 +9,7 @@ import tempfile
 import shutil
 import codecs
 import paramiko
+import socket
 from pprint import pprint
 from testvm import build_and_run
 from tunirvagrant import vagrant_and_run
@@ -80,6 +81,7 @@ def try_again(func):
         except paramiko.ssh_exception.SSHException:
             print "Getting ssh exception, sleeping for 30 seconds and then trying again."
             time.sleep(30)
+            print "Now trying for second time."
             result = func(*args, **kargs)
         return result
     return wrapper
@@ -167,6 +169,7 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
     commands = []
     status = True
     timeout_issue = False
+    ssh_issue = False
 
     with open(jobpath) as fobj:
         commands = fobj.readlines()
@@ -209,7 +212,11 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 status = False
                 timeout_issue = True
                 break
-            except: #execute failed second time
+            except paramiko.ssh_exception.SSHException:
+                status = False
+                ssh_issue = True
+                break
+            except: #execute failed for some reason, we don't know why
                 status = False
                 break
 
@@ -238,6 +245,10 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 print "\n"
             if timeout_issue: # We have 10 minutes timeout in the last command.
                 msg = "Error: We have socket timeout in the last command."
+                fobj.write(msg)
+                print msg
+            if ssh_issue: # We have 10 minutes timeout in the last command.
+                msg = "Error: SSH into the system failed."
                 fobj.write(msg)
                 print msg
             fobj.write("\n\n")

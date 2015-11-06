@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "October 30, 2015" "0.10" "Tunir"
+.TH "TUNIR" "8" "November 07, 2015" "0.11" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -307,6 +307,31 @@ $ sudo ./tunir \-\-job jobname \-\-stateless
 .sp
 In case you are using an Atomic image in vm, you can pass the command line argument \fI\-\-atomic\fP, that way Tunir will be
 able to boot the image properly in the local system.
+.SS Timeout issue
+.sp
+In case if one of the command fails to return within 10 minutes (600 seconds),
+tunir will fail the job with a timeout error. It will be marked at the end of
+the results. You can change the default value in the config file with a timeout
+key. In the below example I am having 300 seconds as timeout for each command.:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+ {
+  "name": "jobname",
+  "type": "vm",
+  "image": "file:///home/vms/Fedora\-Cloud\-Base\-20141203\-21.x86_64.qcow2",
+  "ram": 2048,
+  "user": "fedora",
+  "password": "passw0rd",
+  "timeout": 300
+
+}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
 .SH USING VAGRANT JOBS
 .sp
 \fI\%Vagrant\fP is a very well known system among developers for creating lightweight

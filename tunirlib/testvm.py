@@ -264,16 +264,16 @@ def build_and_run(
     return vm
 
 
-def create_dirs():
+def create_dirs(path='/tmp/testCloud/meta'):
     """Create the dirs in /tmp that we need to store things."""
-    os.makedirs('/tmp/testCloud/meta')
+    os.makedirs()
     return "Created tmp directories."
 
 
-def clean_dirs():
+def clean_dirs(path='/tmp/testCloud'):
     """Remove dirs after a test run."""
-    if os.path.exists('/tmp/testCloud'):
-        shutil.rmtree('/tmp/testCloud')
+    if os.path.exists(path):
+        shutil.rmtree(path)
     return "All cleaned up!"
 
 

@@ -266,7 +266,7 @@ def build_and_run(
 
 def create_dirs(path='/tmp/testCloud/meta'):
     """Create the dirs in /tmp that we need to store things."""
-    os.makedirs()
+    os.makedirs(path)
     return "Created tmp directories."
 
 

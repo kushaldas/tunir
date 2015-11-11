@@ -1,10 +1,12 @@
 import unittest
+
 from mock import patch
 import sys
 import tunirlib
 from contextlib import contextmanager
 from StringIO import StringIO
 from tunirlib.tunirdocker import Result
+
 
 @contextmanager
 def captured_output():
@@ -63,6 +65,26 @@ class ExecuteTests(unittest.TestCase):
         res, negative = tunirlib.execute(config, '## ls')
         self.assertEqual(res, "result1")
         self.assertEqual(negative, "dontcare")
+
+class UpdateResultTest(unittest.TestCase):
+    """
+    Tests the update_result function.
+    """
+    def test_updateresult(self):
+        r1 = Result("result1")
+        r1.return_code = 0
+        r2 = Result("result2")
+        r2.return_code = 127
+        r3 = Result("result3")
+        r3.return_code = 1
+        values = [(r1, 'no', 'ls'), (r2, 'yes', '@@ sudo reboot'), (r3, 'dontcare', '## ping foo')]
+        for res, negative, command in values:
+            tunirlib.update_result(res, command, negative)
+
+        res = [True, True, False]
+        for out, result in zip(tunirlib.STR.iteritems(), res):
+            self.assertEqual(out[1]['status'], result)
+
 
 if __name__ == '__main__':
     unittest.main()

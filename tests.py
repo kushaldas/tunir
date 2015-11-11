@@ -5,7 +5,7 @@ import sys
 import tunirlib
 from contextlib import contextmanager
 from StringIO import StringIO
-from tunirlib.tunirdocker import Result
+from tunirlib.tunirdocker import Result, system
 from tunirlib import testvm
 
 @contextmanager
@@ -18,6 +18,13 @@ def captured_output():
     finally:
         sys.stdout, sys.stderr = old_out, old_err
 
+def create_initrd_kernel():
+    """
+    Creates initrd and kernel test file.
+    """
+    system('touch /tmp/test_tunir/test.qcow2')
+    system('touch /tmp/test_tunir/test-vmlinuz')
+    system('touch /tmp/test_tunir/test-initramfs')
 
 class TunirTests(unittest.TestCase):
     """
@@ -117,6 +124,16 @@ class TestVmTest(unittest.TestCase):
         self.assertTrue(os.path.exists(userdata_filepath))
         testvm.create_seed_img('/tmp/test_tunir/meta/', path)
         self.assertTrue(os.path.exists('/tmp/test_tunir/seed.img'))
+
+    @patch('subprocess.call')
+    def test_download_initrd_kernel(self, s_call):
+        """
+        Tests the initrd and kernel extraction.
+        """
+        create_initrd_kernel()
+        result= testvm.download_initrd_and_kernel('/tmp/test_tunir/test.qcow2', '/tmp/test_tunir')
+        self.assertEqual(result['kernel'], '/tmp/test_tunir/test-vmlinuz')
+        self.assertEqual(result['initrd'], '/tmp/test_tunir/test-initramfs')
 
 if __name__ == '__main__':
     unittest.main()

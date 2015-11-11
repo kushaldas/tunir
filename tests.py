@@ -108,22 +108,32 @@ class TestVmTest(unittest.TestCase):
         self.assertTrue(os.path.exists(path))
         testvm.clean_dirs()
 
-    def test_metadata_userdata(self):
+    @patch('subprocess.call')
+    def test_metadata_userdata(self, s_call):
         """
         Tests metadata and userdata creation
         """
         path = '/tmp/test_tunir'
+        seed_path = '/tmp/test_tunir/seed.img'
+        meta_path = '/tmp/test_tunir/meta/'
         metadata_filepath = '/tmp/test_tunir/meta/meta-data'
         userdata_filepath = '/tmp/test_tunir/meta/user-data'
         testvm.clean_dirs(path)
         testvm.create_dirs(os.path.join(path, 'meta'))
+        system('touch %s' % seed_path)
         base_path = path
         testvm.create_user_data(base_path, "passw0rd")
         testvm.create_meta_data(base_path, "test_tunir")
         self.assertTrue(os.path.exists(metadata_filepath))
         self.assertTrue(os.path.exists(userdata_filepath))
-        testvm.create_seed_img('/tmp/test_tunir/meta/', path)
-        self.assertTrue(os.path.exists('/tmp/test_tunir/seed.img'))
+        testvm.create_seed_img(meta_path, path)
+        self.assertTrue(os.path.exists(seed_path))
+        s_call.assert_called_once_with(['virt-make-fs',
+                                  '--type=msdos',
+                                  '--label=cidata',
+                                  meta_path,
+                                  path + '/seed.img'])
+        testvm.clean_dirs(path)
 
     @patch('subprocess.call')
     def test_download_initrd_kernel(self, s_call):

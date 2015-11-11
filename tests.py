@@ -22,9 +22,19 @@ def create_initrd_kernel():
     """
     Creates initrd and kernel test file.
     """
+    seed_path = '/tmp/test_tunir/seed.img'
     system('touch /tmp/test_tunir/test.qcow2')
     system('touch /tmp/test_tunir/test-vmlinuz')
     system('touch /tmp/test_tunir/test-initramfs')
+    system('touch %s' % seed_path)
+
+class StupidProcess(object):
+    """
+    For testing vm creation.
+    """
+    def __init__(self):
+        self.pid = 42 # Answer to all problems.
+
 
 class TunirTests(unittest.TestCase):
     """
@@ -120,7 +130,7 @@ class TestVmTest(unittest.TestCase):
         userdata_filepath = '/tmp/test_tunir/meta/user-data'
         testvm.clean_dirs(path)
         testvm.create_dirs(os.path.join(path, 'meta'))
-        system('touch %s' % seed_path)
+        create_initrd_kernel()
         base_path = path
         testvm.create_user_data(base_path, "passw0rd")
         testvm.create_meta_data(base_path, "test_tunir")
@@ -144,6 +154,20 @@ class TestVmTest(unittest.TestCase):
         result= testvm.download_initrd_and_kernel('/tmp/test_tunir/test.qcow2', '/tmp/test_tunir')
         self.assertEqual(result['kernel'], '/tmp/test_tunir/test-vmlinuz')
         self.assertEqual(result['initrd'], '/tmp/test_tunir/test-initramfs')
+
+    @patch('subprocess.Popen')
+    def test_boot_image(self, s_popen):
+        res = StupidProcess()
+        s_popen.return_value = res
+
+        path = '/tmp/test_tunir'
+        seed_path = '/tmp/test_tunir/seed.img'
+        testvm.clean_dirs(path)
+        testvm.create_dirs(os.path.join(path, 'meta'))
+        with captured_output() as (out, err):
+            testvm.boot_image('/tmp/test_tunir/test.qcow2', seed_path)
+        self.assertIn("PID: 42", out.getvalue())
+
 
 if __name__ == '__main__':
     unittest.main()

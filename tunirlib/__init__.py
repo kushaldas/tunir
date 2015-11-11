@@ -103,7 +103,7 @@ def execute(config, command, container=None):
                          timeout=config.get('timeout', 600))
         if result.return_code != 0:  # If the command does not fail, then it is a failure.
             negative = 'yes'
-    if command.startswith('##'):
+    elif command.startswith('##'):
         command = command[3:].strip()
         result = run(config['host_string'], config.get('port', '22'), config['user'],
                          config.get('password', None), command, key_filename=config.get('key', None),
@@ -216,8 +216,9 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
                 status = False
                 ssh_issue = True
                 break
-            except: #execute failed for some reason, we don't know why
+            except Exception as err: #execute failed for some reason, we don't know why
                 status = False
+                print err
                 break
 
         # If we are here, that means all commands ran successfully.

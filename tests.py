@@ -115,6 +115,8 @@ class TestVmTest(unittest.TestCase):
         testvm.create_meta_data(base_path, "test_tunir")
         self.assertTrue(os.path.exists(metadata_filepath))
         self.assertTrue(os.path.exists(userdata_filepath))
+        testvm.create_seed_img('/tmp/test_tunir/meta/', path)
+        self.assertTrue(os.path.exists('/tmp/test_tunir/seed.img'))
 
 if __name__ == '__main__':
     unittest.main()

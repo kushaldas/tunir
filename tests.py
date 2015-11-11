@@ -1,12 +1,12 @@
+import os
 import unittest
-
 from mock import patch
 import sys
 import tunirlib
 from contextlib import contextmanager
 from StringIO import StringIO
 from tunirlib.tunirdocker import Result
-
+from tunirlib import testvm
 
 @contextmanager
 def captured_output():
@@ -85,6 +85,36 @@ class UpdateResultTest(unittest.TestCase):
         for out, result in zip(tunirlib.STR.iteritems(), res):
             self.assertEqual(out[1]['status'], result)
 
+
+class TestVmTest(unittest.TestCase):
+    """
+    Tests the testvm module.
+    """
+    def test_directory_handling(self):
+        """
+        Tests metadata dir creation details.
+        """
+        path = '/tmp/test_tunir'
+        testvm.clean_dirs(path)
+        self.assertFalse(os.path.exists(path))
+        testvm.create_dirs(path)
+        self.assertTrue(os.path.exists(path))
+        testvm.clean_dirs()
+
+    def test_metadata_userdata(self):
+        """
+        Tests metadata and userdata creation
+        """
+        path = '/tmp/test_tunir'
+        metadata_filepath = '/tmp/test_tunir/meta/meta-data'
+        userdata_filepath = '/tmp/test_tunir/meta/user-data'
+        testvm.clean_dirs(path)
+        testvm.create_dirs(os.path.join(path, 'meta'))
+        base_path = path
+        testvm.create_user_data(base_path, "passw0rd")
+        testvm.create_meta_data(base_path, "test_tunir")
+        self.assertTrue(os.path.exists(metadata_filepath))
+        self.assertTrue(os.path.exists(userdata_filepath))
 
 if __name__ == '__main__':
     unittest.main()

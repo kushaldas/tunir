@@ -277,7 +277,7 @@ def clean_dirs(path='/tmp/testCloud'):
     return "All cleaned up!"
 
 
-def main():
+def main(): #pragma: no cover
     import argparse
 
     parser = argparse.ArgumentParser()

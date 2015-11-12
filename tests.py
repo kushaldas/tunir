@@ -18,7 +18,7 @@ def captured_output():
     finally:
         sys.stdout, sys.stderr = old_out, old_err
 
-def create_initrd_kernel():
+def create_initrd_kernel(missing=False):
     """
     Creates initrd and kernel test file.
     """
@@ -26,8 +26,9 @@ def create_initrd_kernel():
         os.mkdir('/tmp/test_tunir/')
     seed_path = '/tmp/test_tunir/seed.img'
     system('touch /tmp/test_tunir/test.qcow2')
-    system('touch /tmp/test_tunir/test-vmlinuz')
-    system('touch /tmp/test_tunir/test-initramfs')
+    if not missing:
+        system('touch /tmp/test_tunir/test-vmlinuz')
+        system('touch /tmp/test_tunir/test-initramfs')
     system('touch %s' % seed_path)
 
 class StupidProcess(object):
@@ -157,6 +158,17 @@ class TestVmTest(unittest.TestCase):
         self.assertEqual(result['kernel'], '/tmp/test_tunir/test-vmlinuz')
         self.assertEqual(result['initrd'], '/tmp/test_tunir/test-initramfs')
 
+    @patch('subprocess.call')
+    def test_download_initrd_kernel_exception(self, s_call):
+        """
+        Tests the initrd and kernel extraction.
+        """
+        testvm.clean_dirs('/tmp/test_tunir')
+        create_initrd_kernel(missing=True)
+        with captured_output() as (out, err):
+            result= testvm.download_initrd_and_kernel('/tmp/test_tunir/test.qcow2', '/tmp/test_tunir')
+        self.assertIn("Unable to find kernel or initrd, did they download?", out.getvalue())
+
     @patch('subprocess.Popen')
     def test_boot_image(self, s_popen):
         res = StupidProcess()
@@ -192,6 +204,7 @@ class TestVmFullRunTest(unittest.TestCase):
         res = StupidProcess()
         s_popen.return_value = res
         path = '/tmp/test_tunir'
+        s_call.return_value = 0
         seed_path = '/tmp/test_tunir/seed.img'
         with captured_output() as (out, err):
             testvm.build_and_run(image_url='/tmp/test_tunir/test.qcow2', image_dir=path)

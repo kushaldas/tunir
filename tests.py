@@ -22,6 +22,8 @@ def create_initrd_kernel():
     """
     Creates initrd and kernel test file.
     """
+    if not os.path.exists('/tmp/test_tunir/'):
+        os.mkdir('/tmp/test_tunir/')
     seed_path = '/tmp/test_tunir/seed.img'
     system('touch /tmp/test_tunir/test.qcow2')
     system('touch /tmp/test_tunir/test-vmlinuz')
@@ -168,6 +170,37 @@ class TestVmTest(unittest.TestCase):
             testvm.boot_image('/tmp/test_tunir/test.qcow2', seed_path)
         self.assertIn("PID: 42", out.getvalue())
 
+
+class TestVmFullRunTest(unittest.TestCase):
+    """
+    Tests the whole process of booting up an image.
+    """
+
+    def setUp(self):
+        create_initrd_kernel()
+        meta_path = '/tmp/test_tunir/meta'
+        if not os.path.exists(meta_path):
+            os.mkdir(meta_path)
+
+    @patch('tunirlib.testvm.clean_dirs')
+    @patch('subprocess.call')
+    @patch('subprocess.Popen')
+    def test_build_run(self, s_popen, s_call, s_cleandirs):
+        """
+        Tests te build_and_run function.
+        """
+        res = StupidProcess()
+        s_popen.return_value = res
+        path = '/tmp/test_tunir'
+        seed_path = '/tmp/test_tunir/seed.img'
+        with captured_output() as (out, err):
+            testvm.build_and_run(image_url='/tmp/test_tunir/test.qcow2', image_dir=path)
+        self.assertTrue(s_popen.called)
+        self.assertTrue(s_call.called)
+        self.assertTrue(s_cleandirs.called)
+
+    def tearDown(self):
+        system('rm -rf /tmp/test_tunir')
 
 if __name__ == '__main__':
     unittest.main()

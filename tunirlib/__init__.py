@@ -13,6 +13,7 @@ import socket
 from pprint import pprint
 from testvm import build_and_run
 from tunirvagrant import vagrant_and_run
+from tuniraws import aws_and_run
 from tunirdocker import Docker, Result
 from collections import OrderedDict
 
@@ -285,6 +286,7 @@ def main(args):
     "Starting point of the code"
     job_name = ''
     vm = None
+    node = None
     port = None
     temp_d = None
     container = None
@@ -345,6 +347,13 @@ def main(args):
         if vagrant.failed:
             run_job_flag = False
 
+    elif config['type'] == 'aws':
+        node, config = aws_and_run(config)
+        if node.failed:
+            run_job_flag = False
+        else:
+            print "We have an instance ready in AWS.", node.node
+
     try:
         if run_job_flag:
             status = run_job(args, jobpath, job_name, config, container, port)
@@ -357,15 +366,18 @@ def main(args):
             if temp_d:
                 shutil.rmtree(temp_d)
             return_port(port)
-        if container:
-            container.rm()
-        if vagrant:
-            print "Removing the box."
-            vagrant.destroy()
-        else:
             # FIXME!!!
             # Somehow the terminal is not echoing unless we do the line below.
             os.system('stty sane')
+        elif container:
+            container.rm()
+        elif vagrant:
+            print "Removing the box."
+            vagrant.destroy()
+        elif node:
+            node.destroy()
+            #print "Not destorying the node", node
+
         sys.exit(return_code)
 
 

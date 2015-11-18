@@ -24,6 +24,7 @@ class EC2Node(object):
     def __init__(self, ACCESS_ID, SECRET_KEY, IMAGE_ID, SIZE_ID, region="us-west-1",
                  aki=None, keyname='tunir', security_group='ssh', virt_type='paravirtual'):
 
+        print "Starting an AWS EC2 based job."
         self.region = region
         cls = get_driver(Provider.EC2)
         self.driver = cls(ACCESS_ID, SECRET_KEY, region=region)
@@ -32,10 +33,12 @@ class EC2Node(object):
         self.size = None
         self.image = None
         self.aki = aki
+        self.state = 'pending'
         self.virt_type = virt_type
         self.failed = False
         self.node = None
         self.ip = None
+        print "AWS job type:", virt_type
         print "AMI {0}, AKI {1} SIZE {2} REGION {3}".format(IMAGE_ID, aki, SIZE_ID, region)
         try:
             self.size = [s for s in sizes if s.id == SIZE_ID][0]
@@ -49,19 +52,37 @@ class EC2Node(object):
                 self.node = self.driver.create_node(name='tunir_test_node',
                                                     image=self.image, size=self.size, ex_keyname=keyname,
                                                     ex_security_groups=[security_group, ], )
-                # Now we will try for 3 minutes to get an ip.
-                for i in range(5):
-                    time.sleep(30)
-                    nodes = self.driver.list_nodes(ex_node_ids=[self.node.id, ])
-                    n = nodes[0]
-                    if n.public_ips:
-                        self.ip = n.public_ips[0]
-                        self.node = n
-                        print "Got the IP", self.ip
-                        time.sleep(30) #FIXME!!
-                        break
             else:
-                pass #FIXME!!!
+                self.node = self.driver.create_node(name='tunir_test_node',
+                                                    image=self.image, size=self.size, ex_keyname=keyname,
+                                                    ex_security_groups=[security_group, ], kernel_id=aki )
+            # Now we will try for 3 minutes to get an ip.
+            for i in range(5):
+                time.sleep(30)
+                nodes = self.driver.list_nodes(ex_node_ids=[self.node.id, ])
+                n = nodes[0]
+                if n.public_ips:
+                    self.ip = n.public_ips[0]
+                    self.node = n
+                    print "Got the IP", self.ip
+                    break
+            # Now we will wait change the state to running.
+            # 0: running
+            # 3: pending
+            for i in range(5):
+                time.sleep(30)
+                print "Trying to find the state."
+                nodes = self.driver.list_nodes(ex_node_ids=[self.node.id, ])
+                n = nodes[0]
+                if n.state == 0:
+                    self.node = n
+                    self.state = 'running'
+                    print "The node is in running state."
+                    time.sleep(30)
+                    break
+                else:
+                    print "Nope, not yet."
+
         except Exception as err:
             print err
         if not self.ip:

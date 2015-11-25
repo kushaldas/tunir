@@ -1,0 +1,10 @@
+{
+  "name": "fedora",
+  "type": "vm",
+  "image": "file:///tmp/test_tunir/test.qcow2",
+  "ram": 2048,
+  "user": "fedora",
+  "password": "passw0rd",
+  "timeout": 30,
+  "result_path": "/tmp/test_tunir/tunir_result.txt"
+}

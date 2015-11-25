@@ -6,7 +6,7 @@ import tunirlib
 from contextlib import contextmanager
 from StringIO import StringIO
 from tunirlib.tunirdocker import Result, system
-from tunirlib import testvm
+from tunirlib import testvm, main
 
 @contextmanager
 def captured_output():
@@ -37,6 +37,16 @@ class StupidProcess(object):
     """
     def __init__(self):
         self.pid = 42 # Answer to all problems.
+
+class StupidArgs(object):
+    """
+    For testing vm creation.
+    """
+    def __init__(self):
+        self.job = 'testvm'
+        self.config_dir = './'
+        self.atomic = None
+        self.image_dir = None
 
 
 class TunirTests(unittest.TestCase):
@@ -211,6 +221,38 @@ class TestVmFullRunTest(unittest.TestCase):
         self.assertTrue(s_popen.called)
         self.assertTrue(s_call.called)
         self.assertTrue(s_cleandirs.called)
+
+    def tearDown(self):
+        system('rm -rf /tmp/test_tunir')
+
+
+class TestMain(unittest.TestCase):
+
+    def setUp(self):
+        create_initrd_kernel()
+
+    @patch('time.sleep')
+    @patch('sys.exit')
+    @patch('os.kill')
+    @patch('tunirlib.run')
+    @patch('tunirlib.build_and_run')
+    def test_main(self,p_br, p_run,p_kill, p_exit, p_sleep):
+        res = StupidProcess()
+        p_br.return_value = res
+
+        r1 = Result("result1")
+        r1.return_code = 0
+        r2 = Result("result2")
+        r2.return_code = 0
+        values = [r1, r2]
+        p_run.side_effect = values
+
+        # Now let us construct the args
+        args = StupidArgs()
+
+        main(args)
+        self.assertTrue(p_kill.called)
+        self.assertTrue(p_exit.called)
 
     def tearDown(self):
         system('rm -rf /tmp/test_tunir')

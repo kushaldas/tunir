@@ -148,7 +148,8 @@ def update_result(result, command, negative):
     return True
 
 
-def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
+def run_job(args, jobpath, job_name='', config=None, container=None,
+            port=None ):
     """
     Runs the given command using fabric.
 
@@ -171,6 +172,8 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
     status = True
     timeout_issue = False
     ssh_issue = False
+
+    result_path = config.get('result_path', '/var/run/tunir/tunir_result.txt')
 
     with open(jobpath) as fobj:
         commands = fobj.readlines()
@@ -229,7 +232,7 @@ def run_job(args, jobpath, job_name='', config=None, container=None, port=None):
         print "\n\nJob status: %s\n\n" % status
         nongating = {'number':0, 'pass':0, 'fail':0}
 
-        with codecs.open('/var/run/tunir/tunir_result.txt', 'w', encoding='utf-8') as fobj:
+        with codecs.open(result_path, 'w', encoding='utf-8') as fobj:
             for key, value in STR.iteritems():
                 fobj.write("command: %s\n" % value['command'])
                 print "command: %s" % value['command']

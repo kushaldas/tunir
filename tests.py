@@ -1,10 +1,15 @@
 import os
 import unittest
-from mock import patch
 import sys
-import tunirlib
+
+from collections import OrderedDict
 from contextlib import contextmanager
 from StringIO import StringIO
+
+from mock import patch
+
+import tunirlib
+
 from tunirlib.tunirdocker import Result, system
 from tunirlib import testvm, main
 
@@ -100,7 +105,11 @@ class UpdateResultTest(unittest.TestCase):
     """
     Tests the update_result function.
     """
+    def setUp(self):
+        tunirlib.STR = OrderedDict()
+
     def test_updateresult(self):
+
         r1 = Result("result1")
         r1.return_code = 0
         r2 = Result("result2")

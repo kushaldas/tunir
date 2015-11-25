@@ -258,8 +258,10 @@ class TestMain(unittest.TestCase):
 
         # Now let us construct the args
         args = StupidArgs()
-
-        main(args)
+        with captured_output() as (out, err):
+            main(args)
+            self.assertIn("Passed:1", out.getvalue())
+            self.assertIn("Job status: True", out.getvalue())
         self.assertTrue(p_kill.called)
         self.assertTrue(p_exit.called)
 

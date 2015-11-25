@@ -1,0 +1,2 @@
+sudo python3 -m unittest tunirtests.atomictests.TestDockerInstalled -v
+## sudo python3 -m unittest tunirtests.nongatingtests.TunirNonGatingtests -v

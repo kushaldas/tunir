@@ -1,3 +1,4 @@
 redis
 paramiko
-
+mock
+apache-libcloud

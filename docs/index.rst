@@ -18,6 +18,7 @@ Contents:
    installation
    usage
    vagrant
+   aws
 
 
 Indices and tables

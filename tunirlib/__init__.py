@@ -46,6 +46,7 @@ def run(host='127.0.0.1', port=22, user='root',
     chan = client.get_transport().open_session()
     chan.settimeout(timeout)
     chan.set_combine_stderr(True)
+    chan.get_pty()
     chan.exec_command(command)
     stdout = chan.makefile('r', bufsize)
     stderr = chan.makefile_stderr('r', bufsize)

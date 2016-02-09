@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "November 16, 2015" "0.12" "Tunir"
+.TH "TUNIR" "8" "February 09, 2016" "0.13" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -436,6 +436,80 @@ Now try using \fI\-\-provider\fP option with vagrant command like
 .INDENT 0.0
 .INDENT 3.5
 We have a special key provider in the config for Virtualbox based jobs.
+.UNINDENT
+.UNINDENT
+.SH AWS SUPPORT
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+New feature from 0.13 release
+.UNINDENT
+.UNINDENT
+.sp
+Now we have support to use AWS for testing using Tunir. We can have both HVM,
+and paravirtual types of instances to run the test. You will require [Python
+libcloud](\fI\%https://libcloud.apache.org/\fP) for the same.
+.SS Example of HVM
+.sp
+The following is a JSON file containing the config of a HVM instance.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+{
+  "name": "awsjob",
+  "type": "aws",
+  "image": "ami\-a6fc90c6",
+  "ram": 2048,
+  "user": "fedora",
+  "key": "PATH_TO_PEM",
+  "size_id": "m3.2xlarge",
+  "access_key": "YOUR_ACCESS_KEY",
+  "secret_key": "YOUR_SECRET_KEY",
+  "keyname": "YOUR_KEY_NAME",
+  "security_group": "THE_GROUP_WITH_SSH",
+  "virt_type": "hvm",
+  "timeout": 30
+}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+\fBWARNING:\fP
+.INDENT 0.0
+.INDENT 3.5
+Remember that m3 instances are capable of running HVM.
+.UNINDENT
+.UNINDENT
+.SS Example of paravirtual
+.sp
+Another example with paravirtual type of instance.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+{
+  "name": "awsjob",
+  "type": "aws",
+  "image": "ami\-efff938f",
+  "ram": 2048,
+  "user": "fedora",
+  "key": "PATH_TO_PEM",
+  "size_id": "m1.xlarge",
+  "access_key": "YOUR_ACCESS_KEY",
+  "secret_key": "YOUR_SECRET_KEY",
+  "keyname": "YOUR_KEY_NAME",
+  "security_group": "THE_GROUP_WITH_SSH",
+  "virt_type": "paravirtual",
+  "aki": "aki\-880531cd",
+  "timeout": 30
+}
+.ft P
+.fi
 .UNINDENT
 .UNINDENT
 .INDENT 0.0

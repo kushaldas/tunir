@@ -1,13 +1,12 @@
 include tunir
 include tunir.8
-include tunir.config
 include *.py
 include docs/*.rst
 include README.rst
 include MANIFEST.in
 include default.json
+include default.txt
 include vgt.json
 include vgt.txt
-include default.txt
 include LICENSE
 include COPYING

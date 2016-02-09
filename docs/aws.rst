@@ -1,10 +1,12 @@
 AWS support
 ============
 
-.. note:: This is still only on git, not on any release.
+.. note:: New feature from 0.13 release
 
-Now we have support to use AWS for testing using Tunir. We can have both HVM, and paravirtual types
-of instances to run the test.
+Now we have support to use AWS for testing using Tunir. We can have both HVM,
+and paravirtual types of instances to run the test. You will require [Python
+libcloud](https://libcloud.apache.org/) for the same.
+
 
 Example of HVM
 ---------------

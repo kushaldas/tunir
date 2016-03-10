@@ -125,6 +125,7 @@ def start_multihost(jobname, jobpath):
         print "Missing job file {0}".format(jobpath)
         return False
 
+    # For extra vm(s) in the job file fail fast
     if not match_vm_numbers(vm_keys, jobpath):
         return
 

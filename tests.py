@@ -52,6 +52,7 @@ class StupidArgs(object):
         self.config_dir = './'
         self.atomic = None
         self.image_dir = None
+        self.multi = None
 
 
 class TunirTests(unittest.TestCase):

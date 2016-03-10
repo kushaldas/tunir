@@ -13,14 +13,21 @@ from .tunirutils import run, clean_tmp_dirs, system, run_job
 from .tunirutils import match_vm_numbers
 from .testvm import  create_user_data, create_seed_img
 
-def true_test(vms, private_key):
+def true_test(vms, private_key, command='cat /proc/cpuinfo'):
     "Just to test the connection of a vm"
     fobj = cStringIO.StringIO(private_key)
     key = RSAKey(file_obj=fobj)
-    command = 'cat /proc/cpuinfo'
     for vm in vms.values():
-        res = run(vm['ip'],22,user=vm['user'], command=command,pkey=key)
-        print(res)
+        res = run(vm['ip'],22,user=vm['user'], command=command,pkey=key, debug=False)
+
+def inject_ip_to_vms(vms, private_key):
+    "Updates each vm's /etc/hosts file with IP addresses"
+    text = "\n"
+    for k, v in vms.iteritems():
+        # ip hostname format for /etc/hosts
+        line = "{0}    {1}\n".format(v['ip'],k)
+        text += line
+    true_test(vms, private_key, """sudo sh -c 'echo -e "{0}" >> /etc/hosts'""".format(text))
 
 def create_rsa_key(private_key):
     fobj = cStringIO.StringIO(private_key)
@@ -174,6 +181,7 @@ def start_multihost(jobname, jobpath):
 
     # Now we are supposed to have all the vms booted.
     pprint(vms)
+    inject_ip_to_vms(vms, private_key)
     # This is where we test
     try:
         run_job(jobpath,job_name=jobname,vms=vms)

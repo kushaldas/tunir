@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import ConfigParser
 from pprint import pprint
-from .tunirutils import run, clean_tmp_dirs, system
+from .tunirutils import run, clean_tmp_dirs, system, run_job
 from .testvm import  create_user_data, create_seed_img
 
 def true_test(vms, private_key):
@@ -20,6 +20,11 @@ def true_test(vms, private_key):
     for vm in vms.values():
         res = run(vm['ip'],22,user=vm['user'], command=command,pkey=key)
         print(res)
+
+def create_rsa_key(private_key):
+    fobj = cStringIO.StringIO(private_key)
+    key = RSAKey(file_obj=fobj)
+    return key
 
 def generate_sshkey(bits=2048):
     '''
@@ -105,14 +110,18 @@ public-keys:
             fobj.write(private_key)
 
 
-def start_multihost(config_path):
+def start_multihost(jobname, jobpath):
     "Start the executation here."
+    config_path = jobname + '.cfg'
     print(config_path)
     vms = {} # Empty directory to store vm details
     dirs_to_delete = [] # We will delete those at the end
     config = read_multihost_config(config_path)
     ram = config.get('general').get('ram')
     #TODO Parse the job file first
+    if not os.path.exists(jobpath):
+        print "Missing job file {0}".format(jobpath)
+        return False
 
     # First let us create the seed image
     seed_dir = tempfile.mkdtemp()
@@ -130,6 +139,7 @@ def start_multihost(config_path):
 
     # We will copy the seed in every vm run dir
     vm_keys = [name for name in config.keys() if name.startswith('vm')]
+    pkey = create_rsa_key(private_key)
 
     for vm_c in vm_keys:
         # Now create each vm one by one.
@@ -152,20 +162,23 @@ def start_multihost(config_path):
         new_ips = set(scan_nmap())
         latest_ip = list(new_ips - current_ips)[0]
         this_vm['ip'] = latest_ip
+        this_vm['host_string'] = latest_ip
         this_vm['user'] = config[vm_c].get('user')
-        this_vm['password'] = config[vm_c].get('password')
+        this_vm['pkey'] = pkey
         vms[vm_c] = this_vm
 
     # Now we are supposed to have all the vms booted.
     pprint(vms)
     # This is where we test
-    true_test(vms, private_key)
-    for vm in vms.values():
-        job_pid = vm['process'].pid
-        print('Killing {0}'.format(job_pid))
-        os.kill(job_pid, signal.SIGKILL)
-    pprint(dirs_to_delete)
-    clean_tmp_dirs(dirs_to_delete)
+    try:
+        run_job(jobpath,job_name=jobname,vms=vms)
+
+    finally:
+        for vm in vms.values():
+            job_pid = vm['process'].pid
+            print('Killing {0}'.format(job_pid))
+            os.kill(job_pid, signal.SIGKILL)
+        clean_tmp_dirs(dirs_to_delete)
 
 
 

@@ -35,8 +35,20 @@ def match_vm_numbers(vm_keys, jobpath):
         return False
     return True
 
+def create_ansible_inventory(vms, filepath):
+    """Creates our inventory file for ansible
 
-
+    :param vms: Dictionary containing vm details
+    :param filepath: path to create the inventory file
+    :return: None
+    """
+    text = ''
+    for k, v in vms.iteritems():
+        # ip hostname format for /etc/hosts
+        line = "{0} ansible_ssh_host={1} ansible_ssh_user={2}\n".format(k,v['ip'],v['user'])
+        text += line
+    with open(filepath, 'w') as fobj:
+        fobj.write(text)
 
 def run(host='127.0.0.1', port=22, user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',
@@ -177,7 +189,7 @@ def update_result(result, command, negative):
 
 
 def run_job(jobpath, job_name='', config={}, container=None,
-            port=None, vms=[] ):
+            port=None, vms=[], ansible_path='' ):
     """
     Runs the given command using paramiko.
 
@@ -186,6 +198,9 @@ def run_job(jobpath, job_name='', config={}, container=None,
     :param config: Configuration of the given job
     :param container: Docker object for a Docker job.
     :param port: The port number to connect in case of a vm.
+    :param vms: For multihost configuration
+    :param ansible_path: Path to dir with ansible details
+
     :return: Status of the job in boolean
     """
     if not os.path.exists(jobpath):
@@ -201,7 +216,11 @@ def run_job(jobpath, job_name='', config={}, container=None,
     ssh_issue = False
 
     result_path = config.get('result_path', '/var/run/tunir/tunir_result.txt')
-
+    ansible_inventory_path = None
+    private_key_path = None
+    if ansible_path:
+        ansible_inventory_path = os.path.join(ansible_path, 'tunir_ansible')
+        private_key_path = os.path.join(ansible_path, 'private.pem')
     with open(jobpath) as fobj:
         commands = fobj.readlines()
 
@@ -225,6 +244,16 @@ def run_job(jobpath, job_name='', config={}, container=None,
                 print "Sleeping for %s." % word
                 time.sleep(int(word))
                 continue
+            elif command.startswith('PLAYBOOK'):
+                playbook_name = command.split(' ')[1]
+                playbook = os.path.join(ansible_path, playbook_name)
+                cmd = "ansible-playbook {0} -i {1} --private-key={2} --ssh-extra-args='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'".format(playbook,\
+                            ansible_inventory_path, private_key_path)
+                print(cmd)
+                os.system(cmd)
+                #time.sleep(15   0)
+                continue
+
             print "Executing command: %s" % command
             shell_command = command
 

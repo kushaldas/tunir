@@ -10,7 +10,7 @@ import tempfile
 import ConfigParser
 from pprint import pprint
 from .tunirutils import run, clean_tmp_dirs, system, run_job
-from .tunirutils import match_vm_numbers
+from .tunirutils import match_vm_numbers, create_ansible_inventory
 from .testvm import  create_user_data, create_seed_img
 
 def true_test(vms, private_key, command='cat /proc/cpuinfo'):
@@ -114,12 +114,14 @@ public-keys:
 
     # just for testing
     if private_key:
-        with open(os.path.join(path, 'private.pem'),'w') as fobj:
+        pname = os.path.join(path, 'private.pem')
+        with open(pname,'w') as fobj:
             fobj.write(private_key)
-
+        os.system('chmod 0600 {0}'.format(pname))
 
 def start_multihost(jobname, jobpath):
     "Start the executation here."
+    ansible_inventory_path = None
     config_path = jobname + '.cfg'
     print(config_path)
     vms = {} # Empty directory to store vm details
@@ -182,9 +184,21 @@ def start_multihost(jobname, jobpath):
     # Now we are supposed to have all the vms booted.
     pprint(vms)
     inject_ip_to_vms(vms, private_key)
+    ansible_flag = config.get('general').get('ansible_dir', None)
+    if ansible_flag:
+        dir_to_copy = ansible_flag
+        ansible_inventory_path = os.path.join(seed_dir, 'tunir_ansible')
+        create_ansible_inventory(vms, ansible_inventory_path)
+        if not dir_to_copy.endswith('/'):
+            dir_to_copy += '/*'
+        else:
+            dir_to_copy += '*'
+        os.system('cp -r {0} {1}'.format(dir_to_copy, seed_dir))
+
+
     # This is where we test
     try:
-        run_job(jobpath,job_name=jobname,vms=vms)
+        run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir)
 
     finally:
         for vm in vms.values():

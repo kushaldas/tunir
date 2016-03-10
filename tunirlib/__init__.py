@@ -15,6 +15,7 @@ from testvm import build_and_run
 from tunirvagrant import vagrant_and_run
 from tuniraws import aws_and_run
 from tunirdocker import Docker, Result
+from tunirmultihost import start_multihost
 from collections import OrderedDict
 
 STR = OrderedDict()
@@ -301,10 +302,17 @@ def main(args):
     run_job_flag = True
     if args.atomic:
         atomic = True
+    # For multihost
+    if args.multi:
+        start_multihost(args.multi)
+        os.system('stty sane')
+        return
     if args.job:
         job_name = args.job
     else:
         sys.exit(-2)
+
+
 
     # First let us read the vm configuration.
     config = read_job_configuration(job_name, args.config_dir)
@@ -393,6 +401,7 @@ def startpoint():
                         default='./')
     parser.add_argument("--image-dir", help="Path to the directory where vm images will be held")
     parser.add_argument("--atomic", help="We are using an Atomic image.", action='store_true')
+    parser.add_argument("--multi", help="The multihost configuration")
     args = parser.parse_args()
 
     main(args)

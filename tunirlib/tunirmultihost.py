@@ -10,6 +10,7 @@ import tempfile
 import ConfigParser
 from pprint import pprint
 from .tunirutils import run, clean_tmp_dirs, system, run_job
+from .tunirutils import match_vm_numbers
 from .testvm import  create_user_data, create_seed_img
 
 def true_test(vms, private_key):
@@ -118,10 +119,14 @@ def start_multihost(jobname, jobpath):
     dirs_to_delete = [] # We will delete those at the end
     config = read_multihost_config(config_path)
     ram = config.get('general').get('ram')
+    vm_keys = [name for name in config.keys() if name.startswith('vm')]
     #TODO Parse the job file first
     if not os.path.exists(jobpath):
         print "Missing job file {0}".format(jobpath)
         return False
+
+    if not match_vm_numbers(vm_keys, jobpath):
+        return
 
     # First let us create the seed image
     seed_dir = tempfile.mkdtemp()
@@ -138,7 +143,6 @@ def start_multihost(jobname, jobpath):
     seed_image = os.path.join(seed_dir, 'seed.img')
 
     # We will copy the seed in every vm run dir
-    vm_keys = [name for name in config.keys() if name.startswith('vm')]
     pkey = create_rsa_key(private_key)
 
     for vm_c in vm_keys:

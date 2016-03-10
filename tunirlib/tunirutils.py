@@ -12,6 +12,32 @@ from collections import OrderedDict
 
 STR = OrderedDict()
 
+def match_vm_numbers(vm_keys, jobpath):
+    """Matches vm definations mentioned in config, and in the job file.
+
+    :param vm_keys: vm(s) from the configuration
+    :param jobpath: Path to the job file.
+    """
+    commands = []
+    with open(jobpath) as fobj:
+        commands = fobj.readlines()
+    job_vms = {}
+    for command in commands:
+        if re.search('^vm[0-9] ', command):
+            index = command.find(' ')
+            vm_name = command[:index]
+            job_vms[vm_name] = True
+    job_vms = job_vms.keys()
+    diff = list(set(job_vms) - set(vm_keys))
+    if diff:
+        print("We have extra vm(s) in job file which are not defined in configuratoin.")
+        print(diff)
+        return False
+    return True
+
+
+
+
 def run(host='127.0.0.1', port=22, user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',
                   timeout=120, pkey=None):

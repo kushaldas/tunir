@@ -88,7 +88,6 @@ def update_result(result, command, negative):
     :param job: Job object from model.
     :param command: Text command.
     :param negative: If it is a negative command, which is supposed to fail.
-    :param stateless: If it is a stateless job or not.
 
     :return: Boolean, False if the job as whole is failed.
     """
@@ -262,11 +261,13 @@ def main(args):
     vagrant = None
     return_code = -100
     run_job_flag = True
+
     if args.atomic:
         atomic = True
     # For multihost
     if args.multi:
-        start_multihost(args.multi)
+        jobpath = os.path.join(args.config_dir, args.multi + '.txt')
+        start_multihost(args.multi, jobpath)
         os.system('stty sane')
         return
     if args.job:
@@ -274,6 +275,7 @@ def main(args):
     else:
         sys.exit(-2)
 
+    jobpath = os.path.join(args.config_dir, job_name + '.txt')
 
 
     # First let us read the vm configuration.
@@ -314,7 +316,6 @@ def main(args):
         time.sleep(60)
     if config['type'] == 'docker':
         container = Docker(config['image'])
-    jobpath = os.path.join(args.config_dir, job_name + '.txt')
 
     if config['type'] == 'vagrant':
         vagrant, config = vagrant_and_run(config)

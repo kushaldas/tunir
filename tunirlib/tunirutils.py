@@ -40,7 +40,7 @@ def match_vm_numbers(vm_keys, jobpath):
 
 def run(host='127.0.0.1', port=22, user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',
-                  timeout=120, pkey=None):
+                  timeout=120, pkey=None, debug=True):
     """
     Excecutes a command using paramiko and returns the result.
     :param host: Host to connect
@@ -50,9 +50,11 @@ def run(host='127.0.0.1', port=22, user='root',
     :param command: The command to run
     :param key_filename: SSH private key file.
     :param pkey: RSAKey if we want to login with a in-memory key
+    :param debug: Boolean to print debug messages
     :return:
     """
-    print(host, port, user)
+    if debug:
+        print(host, port, user)
     port = int(port)
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -63,7 +65,8 @@ def run(host='127.0.0.1', port=22, user='root',
         client.connect(hostname=host, port=port,
             username=user, key_filename=key_filename, banner_timeout=10)
     else:
-        print('We have a key')
+        if debug:
+            print('We have a key')
         client.connect(hostname=host, port=port,
                 username=user, pkey=pkey, banner_timeout=10)
     chan = client.get_transport().open_session()

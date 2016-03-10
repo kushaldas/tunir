@@ -16,48 +16,10 @@ from tunirvagrant import vagrant_and_run
 from tuniraws import aws_and_run
 from tunirdocker import Docker, Result
 from tunirmultihost import start_multihost
+from tunirutils import run
 from collections import OrderedDict
 
 STR = OrderedDict()
-
-
-def run(host='127.0.0.1', port=22, user='root',
-                  password='passw0rd', command='/bin/true', bufsize=-1, key_filename='',
-                  timeout=120):
-    """
-    Excecutes a command using paramiko and returns the result.
-    :param host: Host to connect
-    :param port: The port number
-    :param user: The username of the system
-    :param password: User password
-    :param command: The command to run
-    :param key_filename: SSH private key file.
-    :return:
-    """
-    port = int(port)
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    if not key_filename:
-        client.connect(hostname=host, port=port,
-                   username=user, password=password, banner_timeout=10)
-    else:
-        print host, port, user, key_filename
-        client.connect(hostname=host, port=port,
-                   username=user, key_filename=key_filename, banner_timeout=10)
-    chan = client.get_transport().open_session()
-    chan.settimeout(timeout)
-    chan.set_combine_stderr(True)
-    chan.get_pty()
-    chan.exec_command(command)
-    stdout = chan.makefile('r', bufsize)
-    stderr = chan.makefile_stderr('r', bufsize)
-    stdout_text = stdout.read()
-    stderr_text = stderr.read()
-    out = Result(stdout_text)
-    status = int(chan.recv_exit_status())
-    client.close()
-    out.return_code = status
-    return out
 
 
 def read_job_configuration(jobname='', config_dir='./'):

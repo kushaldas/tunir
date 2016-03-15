@@ -43,12 +43,21 @@ def create_ansible_inventory(vms, filepath):
     :return: None
     """
     text = ''
+    extra = ''
     for k, v in vms.iteritems():
         # ip hostname format for /etc/hosts
         line = "{0} ansible_ssh_host={1} ansible_ssh_user={2}\n".format(k,v['ip'],v['user'])
         text += line
+
+    dirpath = os.path.dirname(filepath)
+    original_inventory = os.path.join(dirpath, 'inventory')
+    if os.path.exists(original_inventory):
+        with open(original_inventory) as fp:
+            extra = fp.read()
     with open(filepath, 'w') as fobj:
         fobj.write(text)
+        if extra:
+            fobj.write(extra)
 
 def run(host='127.0.0.1', port=22, user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',

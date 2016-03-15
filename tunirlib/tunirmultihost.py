@@ -187,13 +187,13 @@ def start_multihost(jobname, jobpath):
     ansible_flag = config.get('general').get('ansible_dir', None)
     if ansible_flag:
         dir_to_copy = ansible_flag
-        ansible_inventory_path = os.path.join(seed_dir, 'tunir_ansible')
-        create_ansible_inventory(vms, ansible_inventory_path)
         if not dir_to_copy.endswith('/'):
             dir_to_copy += '/*'
         else:
             dir_to_copy += '*'
         os.system('cp -r {0} {1}'.format(dir_to_copy, seed_dir))
+        ansible_inventory_path = os.path.join(seed_dir, 'tunir_ansible')
+        create_ansible_inventory(vms, ansible_inventory_path)
 
 
     # This is where we test

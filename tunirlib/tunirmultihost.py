@@ -100,8 +100,7 @@ def boot_qcow2(image, seed, ram=1024, vcpu=1):
     print(' '.join(boot_args))
     vm = subprocess.Popen(boot_args)
 
-    print "Successfully booted your local cloud image!"
-    print "PID: %d" % vm.pid
+    print("Successfully booted your local cloud image!")
 
     return vm
 
@@ -135,7 +134,7 @@ def start_multihost(jobname, jobpath, debug=False):
     vm_keys = [name for name in config.keys() if name.startswith('vm')]
     #TODO Parse the job file first
     if not os.path.exists(jobpath):
-        print "Missing job file {0}".format(jobpath)
+        print("Missing job file {0}".format(jobpath))
         return False
 
     # For extra vm(s) in the job file fail fast
@@ -216,6 +215,11 @@ def start_multihost(jobname, jobpath, debug=False):
                 for d in dirs_to_delete:
                     fobj.write('rm -rf {0}\n'.format(d))
             print("DEBUG MODE ON. Destroy from {0}".format(filename))
+            # Put the ip/hostnames into a text file
+            filename = os.path.join(seed_dir, 'hostnames.txt')
+            with open(filename, 'w') as fobj:
+                for k, v in vms.iteritems():
+                    fobj.write('{0}={1}\n'.format(k,v['ip']))
             return # Do not destroy for debug case
         for vm in vms.values():
             job_pid = vm['process'].pid

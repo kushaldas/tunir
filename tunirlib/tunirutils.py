@@ -46,7 +46,8 @@ def create_ansible_inventory(vms, filepath):
     extra = ''
     for k, v in vms.iteritems():
         # ip hostname format for /etc/hosts
-        line = "{0} ansible_ssh_host={1} ansible_ssh_user={2}\n".format(k,v['ip'],v['user'])
+        hostname = v.get('hostname',k)
+        line = "{0} ansible_ssh_host={1} ansible_ssh_user={2}\n".format(hostname,v['ip'],v['user'])
         text += line
 
     dirpath = os.path.dirname(filepath)

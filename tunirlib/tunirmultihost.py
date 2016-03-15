@@ -24,8 +24,12 @@ def inject_ip_to_vms(vms, private_key):
     "Updates each vm's /etc/hosts file with IP addresses"
     text = "\n"
     for k, v in vms.iteritems():
+        line = ''
         # ip hostname format for /etc/hosts
-        line = "{0}    {1}\n".format(v['ip'],k)
+        if 'hostname' in v:
+            line = "{0}    {1} {2}\n".format(v['ip'],k,v['hostname'])
+        else:
+            line = "{0}    {1}\n".format(v['ip'],k)
         text += line
     true_test(vms, private_key, """sudo sh -c 'echo -e "{0}" >> /etc/hosts'""".format(text))
 

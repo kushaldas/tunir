@@ -182,6 +182,8 @@ def start_multihost(jobname, jobpath, debug=False):
         this_vm['ip'] = latest_ip
         this_vm['host_string'] = latest_ip
         this_vm['user'] = config[vm_c].get('user')
+        if 'hostname' in config[vm_c]:
+            this_vm['hostname'] = config[vm_c].get('hostname')
         this_vm['pkey'] = pkey
         vms[vm_c] = this_vm
 

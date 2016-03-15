@@ -119,7 +119,7 @@ public-keys:
             fobj.write(private_key)
         os.system('chmod 0600 {0}'.format(pname))
 
-def start_multihost(jobname, jobpath):
+def start_multihost(jobname, jobpath, debug=False):
     "Start the executation here."
     ansible_inventory_path = None
     config_path = jobname + '.cfg'
@@ -201,6 +201,16 @@ def start_multihost(jobname, jobpath):
         run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir)
 
     finally:
+        if debug:
+            filename = os.path.join(seed_dir, 'destroy.sh')
+            with open(filename, 'w') as fobj:
+                for vm in vms.values():
+                    job_pid = vm['process'].pid
+                    fobj.write('kill -9 {0}\n'.format(job_pid))
+                for d in dirs_to_delete:
+                    fobj.write('rm -rf {0}\n'.format(d))
+            print("DEBUG MODE ON. Destroy from {0}".format(filename))
+            return # Do not destroy for debug case
         for vm in vms.values():
             job_pid = vm['process'].pid
             print('Killing {0}'.format(job_pid))

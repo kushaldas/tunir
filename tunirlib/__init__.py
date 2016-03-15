@@ -257,6 +257,7 @@ def main(args):
     temp_d = None
     container = None
     atomic = False
+    debug = False
     image_dir = ''
     vagrant = None
     return_code = -100
@@ -264,10 +265,12 @@ def main(args):
 
     if args.atomic:
         atomic = True
+    if args.debug:
+        debug = True
     # For multihost
     if args.multi:
         jobpath = os.path.join(args.config_dir, args.multi + '.txt')
-        start_multihost(args.multi, jobpath)
+        start_multihost(args.multi, jobpath, debug)
         os.system('stty sane')
         return
     if args.job:
@@ -364,6 +367,7 @@ def startpoint():
                         default='./')
     parser.add_argument("--image-dir", help="Path to the directory where vm images will be held")
     parser.add_argument("--atomic", help="We are using an Atomic image.", action='store_true')
+    parser.add_argument("--debug", help="Keep the vms running for debug in multihost mode.", action='store_true')
     parser.add_argument("--multi", help="The multihost configuration")
     args = parser.parse_args()
 

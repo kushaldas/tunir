@@ -53,6 +53,7 @@ class StupidArgs(object):
         self.atomic = None
         self.image_dir = None
         self.multi = None
+        self.debug = False
 
 
 class TunirTests(unittest.TestCase):

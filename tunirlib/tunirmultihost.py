@@ -95,7 +95,8 @@ def boot_qcow2(image, seed, ram=1024, vcpu=1):
                  'bridge,br=virbr0',
                  '-net',
                  'nic,macaddr={0},model=virtio'.format(mac),
-                 '-nographic'
+                 '-display',
+                 'none'
                  ]
     print(' '.join(boot_args))
     vm = subprocess.Popen(boot_args)
@@ -122,11 +123,12 @@ public-keys:
             fobj.write(private_key)
         os.system('chmod 0600 {0}'.format(pname))
 
-def start_multihost(jobname, jobpath, debug=False, oldconfig=None):
+def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.'):
     "Start the executation here."
     ansible_inventory_path = None
-    config_path = jobname + '.cfg'
-    print(config_path)
+    config_path = os.path.join(config_dir, jobname + '.cfg')
+    if debug:
+        print(config_path)
     config = None
     vms = {} # Empty directory to store vm details
     dirs_to_delete = [] # We will delete those at the end
@@ -233,7 +235,8 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None):
             return # Do not destroy for debug case
         for vm in vms.values():
             job_pid = vm['process'].pid
-            print('Killing {0}'.format(job_pid))
+            if debug:
+                print('Killing {0}'.format(job_pid))
             os.kill(job_pid, signal.SIGKILL)
         clean_tmp_dirs(dirs_to_delete)
         return status

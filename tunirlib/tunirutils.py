@@ -62,7 +62,7 @@ def create_ansible_inventory(vms, filepath):
 
 def run(host='127.0.0.1', port=22, user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',
-                  timeout=120, pkey=None, debug=True):
+                  timeout=120, pkey=None, debug=False):
     """
     Excecutes a command using paramiko and returns the result.
     :param host: Host to connect

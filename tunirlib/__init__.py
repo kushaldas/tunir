@@ -1,16 +1,7 @@
 import os
 import sys
 import json
-import time
-import redis
-import signal
 import argparse
-import tempfile
-import shutil
-import codecs
-import paramiko
-import socket
-from pprint import pprint
 from tunirvagrant import vagrant_and_run
 from tuniraws import aws_and_run
 from tunirdocker import Docker, Result

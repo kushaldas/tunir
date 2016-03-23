@@ -172,7 +172,7 @@ In the above example we are creating 3 vm(s) with given hostnames.
 How to execute the playbook(s)?
 --------------------------------
 
-In the *jobname.txt* you should have a **PLAYBOOK* command as given below
+In the *jobname.txt* you should have a **PLAYBOOK** command as given below
 
 ::
 

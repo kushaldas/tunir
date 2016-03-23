@@ -273,6 +273,10 @@ def run_job(jobpath, job_name='', config={}, container=None,
                 vm_name = command[:index]
                 shell_command = command[index+1:]
                 config = vms[vm_name]
+            else: #At this case, all special keywords checked, now it will run on vm1
+                vm_name = 'vm1'
+                shell_command = command
+                config = vms[vm_name]
             try:
                 result, negative = execute(config, shell_command)
                 status = update_result(result, command, negative)

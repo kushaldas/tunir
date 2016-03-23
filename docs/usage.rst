@@ -81,7 +81,7 @@ user
     The username to connect to.
 
 password
-    The password of the given user. Right now for cloud VM(s) it is set to *passw0rd*.
+    The password of the given user. Right now for cloud VM(s) connect using ssh key.
 
 key
     The path to the ssh key, the password value should be an empty string for this.
@@ -131,6 +131,56 @@ vm1 (which is the available vm).
 
 In the above example the line 1, and 3 will be executed on the vm1, and line 2 will be
 executed on vm2.
+
+Using Ansible
+--------------
+
+Along with multivm configuration we got a new feature of using
+`Ansible <https://www.ansible.com/>`_ to configure the vm(s) we create. To do so,
+first create the required roles, and playbook in a given path. You can write down
+the group of hosts with either naming like *vm1*, *vm2*, *vm3* or give them
+proper names like *kube-master.example.com*. For the second case we also have to
+pass these hostnames in each vm definition in the configuration file. We also
+provide the path of the directory containing all ansible details with *ansible_dir*
+value.
+
+Example configuration
+::
+
+    [general]
+    cpu = 1
+    ram = 1024
+    ansible_dir = /root/contrib/ansible
+
+    [vm1]
+    user = fedora
+    image = /root/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
+    hostname = kube-master.example.com
+
+    [vm2]
+    user = fedora
+    image = /root/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
+    hostname = kube-node-01.example.com
+
+    [vm3]
+    user = fedora
+    image = /root/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
+    hostname = kube-node-02.example.com
+
+In the above example we are creating 3 vm(s) with given hostnames.
+
+How to execute the playbook(s)?
+--------------------------------
+
+In the *jobname.txt* you should have a **PLAYBOOK* command as given below
+
+::
+
+    PLAYBOOK atom.yml
+    vm1 sudo atomic run projectatomic/guestbookgo-atomicapp
+
+In this example we are running a playbook called *atom.yml*, and then in the vm1 we
+are using atomicapp to start a nulecule app :)
 
 Example of configuration file to run the tests on a remote machine
 -------------------------------------------------------------------

@@ -8,39 +8,55 @@ The current version can be used along with cron to run at predefined times. Tuni
 the output in the terminal, it also saves each command it ran, and the output in a text
 file located at '/var/run/tunir/tunir_results.txt'.
 
-Enabling a queue of ports for the VMs
--------------------------------------
-
-We maintain a queue of available ports in the local system, which will be used to create
-VM(s). We maintain this queue in Redis. We have a helper script which can enable some
-default ports to be used. They are defined in the *createports.py*. In case you are using
-a rpm, please check */usr/share/tunir/* directory for the same.::
-
-    $ python createports.py
-
-.. note:: This is very important. Please have the queue with usable ports ready before any
-   other step. We use ports 2222 to 2230 as the default ports available in createports.py.
-
 Configuring a new job
 ----------------------
 
-For each different job, two files are required. For example, *default* job has two files,
-**default.json** and **default.txt**.
+There are two different kinds of job configuration files, the newer one is multivm config
+which can take any qcow2 image and use them to boot up one or more vms. The other option
+is to use a json file based configuration which can be used for vm(s), vagrant images, or
+bare metal remote system based testing.
+
+For a multivm configuration for a job called **default** create **default.cfg** file as
+explained below. We will also require another **default.txt** file which will contain the
+steps for testing.
+
+jobname.cfg
+--------------
+
+The following example contains a job where we are creating two vms from the given image
+files. The images can be either standard cloud image, or Atomic image. We generate ssh
+keys for each run, and use that to login to the box.
+
+::
+
+    [general]
+    cpu = 1
+    ram = 1024
+
+    [vm1]
+    user = fedora
+    image = /home/Fedora-Cloud-Base-20141203-21.x86_64.qcow2
+
+    [vm2]
+    user = fedora
+    image = /home/Fedora-Cloud-Base-20141203-21.x86_64.qcow2
+
+The above configuration file is self explanatory.
 
 jobname.json
 -------------
 
-This file is the main configuration for the job. Below is the example of one such job.
+This file is the main configuration for the job when we just need only one vm, or using
+Vagrant, or testing on a remote vm/bare metal box. Below is the example of one such job.
 
 ::
 
     {
       "name": "jobname",
       "type": "vm",
-      "image": "file:///home/vms/Fedora-Cloud-Base-20141203-21.x86_64.qcow2",
+      "image": "/home/vms/Fedora-Cloud-Base-20141203-21.x86_64.qcow2",
       "ram": 2048,
       "user": "fedora",
-      "password": "passw0rd"
     }
 
 The possible keys are mentioned below.
@@ -130,30 +146,6 @@ You can actually provide a path to tunir so that it can pick up job configuratio
     $ sudo ./tunir --job jobname --config-dir /etc/tunirjobs/
 
 
-Persistence for downloaded images
----------------------------------
-
-To make images that are downloaded persist across runs of tunir and get reused then you can specify the image directory to save them in.::
-
-    $ sudo ./tunir --job jobname --image-dir /var/lib/tunirimages/
-
-
-Stateless jobs
----------------
-
-.. note:: Now all jobs are by default stateless.
-
-You can run a job as stateless, which does not require any database. This will print the result at the end of the
-run.::
-
-    $ sudo ./tunir --job jobname --stateless
-
-
-Atomic images
--------------
-
-In case you are using an Atomic image in vm, you can pass the command line argument *--atomic*, that way Tunir will be
-able to boot the image properly in the local system.
 
 Timeout issue
 --------------

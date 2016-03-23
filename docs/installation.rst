@@ -21,19 +21,14 @@ We are currently depended on the following projects or libraries.
 - libguestfs-tools
 - ansible
 - paramiko
-- redis
-- python-redis
 - vagrant-libvirt
+- net-tools
 - docker  (optional)
+- Ansible (optional)
 
 
 You can install them in Fedora by the following command::
 
-    $ sudo dnf install libguestfs-tools python-paramiko python-sqlalchemy docker-io python-redis redis vagrant-libvirt ansible
-
-
-Start the redis server with the following command.::
-
-    $ sudo service redis start
+    $ sudo dnf install libguestfs-tools python-paramiko docker-io vagrant-libvirt ansible net-tools
 
 

@@ -42,6 +42,10 @@ keys for each run, and use that to login to the box.
     image = /home/Fedora-Cloud-Base-20141203-21.x86_64.qcow2
 
 The above configuration file is self explanatory.
+Each of the vm(s) created from the above configuration will get all the other vms' IP
+details in the */etc/hosts* along with vm name. Means *vm1* can ping *vm2* and vice
+versa.
+
 
 jobname.json
 -------------
@@ -99,7 +103,7 @@ on other gating tests. Any command in jobname.txt starting with ## sign will mar
 
 Example::
 
-    ## curl -O https://kushal.fedorapeople.org/tunirtests.tar.gziii
+    ## curl -O https://kushal.fedorapeople.org/tunirtests.tar.gz
     ls /
     ## foobar
     ## ls /root
@@ -109,7 +113,24 @@ Example::
     SLEEP 40
     ls /etc
 
+For multivm configurations
+###########################
 
+In case where we are dealing with multiple vms using .cfg file in our configuration,
+we prefix each line with the vm name (like vm1, vm2, vm3). This marks which command
+to run on which vm. The tool first checks the available vm names to these marks in the
+*jobname.txt* file, and it will complain about any extra vm marked in there. If one
+does not provide vm name, then it is assumed that the command will execute only on
+vm1 (which is the available vm).
+
+::
+
+    vm1 sudo su -c"echo Hello > /abcd.txt"
+    vm2 ls /
+    vm1 ls /
+
+In the above example the line 1, and 3 will be executed on the vm1, and line 2 will be
+executed on vm2.
 
 Example of configuration file to run the tests on a remote machine
 -------------------------------------------------------------------

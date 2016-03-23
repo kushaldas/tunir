@@ -231,23 +231,6 @@ Failed:{2}""".format(nongating['number'], nongating['pass'],
         return status
 
 
-def get_port():
-    "Gets the latest port from redis queue."
-    r = redis.Redis()
-    port = r.rpop('tunirports')
-    print "Got port: %s" % port
-    return port
-
-def return_port(port):
-    """
-     Returns the port to the queue.
-    :param port: The port number
-    :return: None
-    """
-    r = redis.Redis()
-    port = r.lpush('tunirports', port)
-    return port
-
 def main(args):
     "Starting point of the code"
     job_name = ''
@@ -287,36 +270,11 @@ def main(args):
         sys.exit(-1)
 
     os.system('mkdir -p /var/run/tunir')
-    if config['type'] in ['vm',]:
-        # If there is an image_dir then use that, else we need to
-        # create a temp directory to store the image in
-        if args.image_dir:
-            image_dir = args.image_dir
-        else:
-            temp_d = tempfile.mkdtemp()
-            image_dir = temp_d
-        # If the image_dir is not yet created lets create it
-        if not os.path.exists(image_dir):
-            os.mkdir(image_dir)
-        # Create the supporting meta directory if it doesn't exist
-        if not os.path.exists(os.path.join(image_dir, 'meta')):
-            os.mkdir(os.path.join(image_dir, 'meta'))
-        # Update perms on directory
-        os.system('chmod 0777 %s' % image_dir)
-
-
     if config['type'] == 'vm':
-        # First get us the free port number from redis queue.
-        port = get_port()
-        if not port:
-            print "No port found in the redis queue."
-            return
-        vm = build_and_run(config['image'], config['ram'],
-                           graphics=True, vnc=False, atomic=atomic,
-                           port=port, image_dir=image_dir)
-        job_pid = vm.pid # The pid to kill at the end
-        # We should wait for a minute here
-        time.sleep(60)
+        status = start_multihost(job_name, jobpath, debug, config)
+        os.system('stty sane')
+        sys.exit(status)
+
     if config['type'] == 'docker':
         container = Docker(config['image'])
 
@@ -339,17 +297,7 @@ def main(args):
                 return_code = 0
     finally:
         # Now let us kill the kvm process
-        if vm:
-            os.kill(job_pid, signal.SIGKILL)
-            if temp_d:
-                shutil.rmtree(temp_d)
-            return_port(port)
-            # FIXME!!!
-            # Somehow the terminal is not echoing unless we do the line below.
-            os.system('stty sane')
-        elif container:
-            container.rm()
-        elif vagrant:
+        if vagrant:
             print "Removing the box."
             vagrant.destroy()
         elif node:

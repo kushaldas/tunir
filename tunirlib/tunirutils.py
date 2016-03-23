@@ -336,3 +336,8 @@ Failed:{2}""".format(nongating['number'], nongating['pass'],
             fobj.write(msg)
             print msg
         return status
+
+class IPException(Exception):
+    "We do not have an ip for a vm"
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)

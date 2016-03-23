@@ -11,6 +11,7 @@ import ConfigParser
 from pprint import pprint
 from .tunirutils import run, clean_tmp_dirs, system, run_job
 from .tunirutils import match_vm_numbers, create_ansible_inventory
+from .tunirutils import IPException
 from .testvm import  create_user_data, create_seed_img
 
 def true_test(vms, private_key, command='cat /proc/cpuinfo'):
@@ -61,6 +62,16 @@ def scan_nmap():
             ips.append(ip)
     return ips
 
+def scan_arp(macaddr):
+    "Find the ip for the given mac addr"
+    output, err, eid = system('arp -an')
+    lines = output.split('\n')
+    for line in lines:
+        words = line.split(' ')
+        if len(words) > 3:
+            if words[3].strip() == macaddr:
+                return words[1].strip('()')
+
 def read_multihost_config(filepath):
     '''Reads the given filepath, and returns a dict with all required information.
     '''
@@ -103,7 +114,7 @@ def boot_qcow2(image, seed, ram=1024, vcpu=1):
 
     print("Successfully booted your local cloud image!")
 
-    return vm
+    return vm, mac
 
 def create_ssh_metadata(path, pub_key, private_key=None):
     "Creates the user data with ssh key"
@@ -126,6 +137,7 @@ public-keys:
 def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.'):
     "Start the executation here."
     ansible_inventory_path = None
+    fault_in_ip_addr = False
     config_path = os.path.join(config_dir, jobname + '.cfg')
     if debug:
         print(config_path)
@@ -168,53 +180,59 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
     # We will copy the seed in every vm run dir
     pkey = create_rsa_key(private_key)
 
-    for vm_c in vm_keys:
-        # Now create each vm one by one.
-        # Get the current ips
-        current_ips = set(scan_nmap())
-        current_d = tempfile.mkdtemp()
-        print('Created {0}'.format(current_d))
-        os.system('chmod 0777 %s' % current_d)
-        dirs_to_delete.append(current_d)
-        system('cp  {0} {1}'.format(seed_image, current_d))
-        # Next copy the qcow2 image
-        image_path = config[vm_c].get('image')
-        os.system('cp {0} {1}'.format(image_path, current_d))
-        image = os.path.join(current_d, os.path.basename(image_path))
-
-        vm = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu='1')
-        this_vm = {'process': vm}
-        print("We will wait for 45 seconds for the image to boot up.")
-        time.sleep(45)
-        new_ips = set(scan_nmap())
-        latest_ip = list(new_ips - current_ips)[0]
-        this_vm['ip'] = latest_ip
-        this_vm['host_string'] = latest_ip
-        this_vm['user'] = config[vm_c].get('user')
-        if 'hostname' in config[vm_c]:
-            this_vm['hostname'] = config[vm_c].get('hostname')
-        this_vm['pkey'] = pkey
-        vms[vm_c] = this_vm
-
-    # Now we are supposed to have all the vms booted.
-    if debug:
-        pprint(vms)
-    print(' ')
-    inject_ip_to_vms(vms, private_key)
-    ansible_flag = config.get('general').get('ansible_dir', None)
-    if ansible_flag:
-        dir_to_copy = ansible_flag
-        if not dir_to_copy.endswith('/'):
-            dir_to_copy += '/*'
-        else:
-            dir_to_copy += '*'
-        os.system('cp -r {0} {1}'.format(dir_to_copy, seed_dir))
-        ansible_inventory_path = os.path.join(seed_dir, 'tunir_ansible')
-        create_ansible_inventory(vms, ansible_inventory_path)
-
-
-    # This is where we test
     try:
+        for vm_c in vm_keys:
+            # Now create each vm one by one.
+            # Get the current ips
+            current_d = tempfile.mkdtemp()
+            print('Created {0}'.format(current_d))
+            os.system('chmod 0777 %s' % current_d)
+            dirs_to_delete.append(current_d)
+            system('cp  {0} {1}'.format(seed_image, current_d))
+            # Next copy the qcow2 image
+            image_path = config[vm_c].get('image')
+            os.system('cp {0} {1}'.format(image_path, current_d))
+            image = os.path.join(current_d, os.path.basename(image_path))
+
+            vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu='1')
+            this_vm = {'process': vm, 'mac': mac}
+            print("We will wait for 45 seconds for the image to boot up.")
+            time.sleep(45)
+            latest_ip = scan_arp(mac)
+            if not latest_ip:
+                fault_in_ip_addr = True
+                break
+            this_vm['ip'] = latest_ip
+            this_vm['host_string'] = latest_ip
+            this_vm['user'] = config[vm_c].get('user')
+            if 'hostname' in config[vm_c]:
+                this_vm['hostname'] = config[vm_c].get('hostname')
+            this_vm['pkey'] = pkey
+            vms[vm_c] = this_vm
+
+        if fault_in_ip_addr:
+            print('Oops no IP for this vm.')
+            raise IPException
+
+        # Now we are supposed to have all the vms booted.
+        if debug:
+            pprint(vms)
+        print(' ')
+        inject_ip_to_vms(vms, private_key)
+        ansible_flag = config.get('general').get('ansible_dir', None)
+        if ansible_flag:
+            dir_to_copy = ansible_flag
+            if not dir_to_copy.endswith('/'):
+                dir_to_copy += '/*'
+            else:
+                dir_to_copy += '*'
+            os.system('cp -r {0} {1}'.format(dir_to_copy, seed_dir))
+            ansible_inventory_path = os.path.join(seed_dir, 'tunir_ansible')
+            create_ansible_inventory(vms, ansible_inventory_path)
+
+
+        # This is where we test
+
         status = run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir)
 
     finally:

@@ -122,16 +122,24 @@ public-keys:
             fobj.write(private_key)
         os.system('chmod 0600 {0}'.format(pname))
 
-def start_multihost(jobname, jobpath, debug=False):
+def start_multihost(jobname, jobpath, debug=False, oldconfig=None):
     "Start the executation here."
     ansible_inventory_path = None
     config_path = jobname + '.cfg'
     print(config_path)
+    config = None
     vms = {} # Empty directory to store vm details
     dirs_to_delete = [] # We will delete those at the end
-    config = read_multihost_config(config_path)
-    ram = config.get('general').get('ram')
-    vm_keys = [name for name in config.keys() if name.startswith('vm')]
+    vm_keys = None
+    if not oldconfig:
+        config = read_multihost_config(config_path)
+        ram = config.get('general').get('ram')
+        vm_keys = [name for name in config.keys() if name.startswith('vm')]
+    else: # For a single vm job
+        config = {'vm1': oldconfig}
+        config['general'] = {'ansible_dir': oldconfig.get('ansible_dir', None)}
+        ram = oldconfig.get('ram', '1024')
+        vm_keys = ['vm1',]
     #TODO Parse the job file first
     if not os.path.exists(jobpath):
         print("Missing job file {0}".format(jobpath))
@@ -150,7 +158,7 @@ def start_multihost(jobname, jobpath, debug=False):
     os.makedirs(meta)
     print("Generating SSH keys")
     private_key, public_key, KEY = generate_sshkey()
-    create_user_data(seed_dir, "passw0rd", atomic=False)
+    create_user_data(seed_dir, "passw0rd")
     create_ssh_metadata(seed_dir, public_key, private_key)
     create_seed_img(meta, seed_dir)
     seed_image = os.path.join(seed_dir, 'seed.img')
@@ -187,7 +195,9 @@ def start_multihost(jobname, jobpath, debug=False):
         vms[vm_c] = this_vm
 
     # Now we are supposed to have all the vms booted.
-    pprint(vms)
+    if debug:
+        pprint(vms)
+    print(' ')
     inject_ip_to_vms(vms, private_key)
     ansible_flag = config.get('general').get('ansible_dir', None)
     if ansible_flag:
@@ -203,7 +213,7 @@ def start_multihost(jobname, jobpath, debug=False):
 
     # This is where we test
     try:
-        run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir)
+        status = run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir)
 
     finally:
         if debug:
@@ -226,6 +236,7 @@ def start_multihost(jobname, jobpath, debug=False):
             print('Killing {0}'.format(job_pid))
             os.kill(job_pid, signal.SIGKILL)
         clean_tmp_dirs(dirs_to_delete)
+        return status
 
 
 

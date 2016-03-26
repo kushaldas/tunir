@@ -228,9 +228,14 @@ def run_job(jobpath, job_name='', config={}, container=None,
     result_path = config.get('result_path', '/var/run/tunir/tunir_result.txt')
     ansible_inventory_path = None
     private_key_path = None
+    private_key_path = None
     if ansible_path:
         ansible_inventory_path = os.path.join(ansible_path, 'tunir_ansible')
-        private_key_path = os.path.join(ansible_path, 'private.pem')
+        if 'keypath' in vms['general']:
+            private_key_path = vms['general']['keypath']
+        else:
+            private_key_path = os.path.join(ansible_path, 'private.pem')
+
     with open(jobpath) as fobj:
         commands = fobj.readlines()
 
@@ -261,7 +266,6 @@ def run_job(jobpath, job_name='', config={}, container=None,
                             ansible_inventory_path, private_key_path)
                 print(cmd)
                 os.system(cmd)
-                #time.sleep(15   0)
                 continue
 
             print "Executing command: %s" % command
@@ -334,7 +338,7 @@ Passed:{1}
 Failed:{2}""".format(nongating['number'], nongating['pass'],
                 nongating['fail'])
             fobj.write(msg)
-            print msg
+            print(msg)
         return status
 
 class IPException(Exception):

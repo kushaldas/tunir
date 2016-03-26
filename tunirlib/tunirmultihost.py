@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import signal
 import random
@@ -136,8 +137,10 @@ public-keys:
 
 def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.'):
     "Start the executation here."
+    status = 0
     ansible_inventory_path = None
     fault_in_ip_addr = False
+    private_key = None
     config_path = os.path.join(config_dir, jobname + '.cfg')
     if debug:
         print(config_path)
@@ -149,9 +152,28 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
         config = read_multihost_config(config_path)
         ram = config.get('general').get('ram')
         vm_keys = [name for name in config.keys() if name.startswith('vm')]
+        if 'key' in config['general']:
+            data = ''
+            try:
+                with open(config['general']['key']) as fobj:
+                    data = fobj.read()
+            except Exception as e:
+                print(e)
+                raise e
+            config['general']['pkey'] = create_rsa_key(data)
+            private_key = data
+            config['general']['keypath'] = config['general']['key']
     else: # For a single vm job
         config = {'vm1': oldconfig}
         config['general'] = {'ansible_dir': oldconfig.get('ansible_dir', None)}
+        if 'key' in oldconfig:
+            data = ''
+            with open(oldconfig['key']) as fobj:
+                data = fobj.read()
+            config['general']['pkey'] = create_rsa_key(data)
+            config['general']['keypath'] = oldconfig['key']
+            private_key = data
+            config['general']['key'] = data
         ram = oldconfig.get('ram', '1024')
         vm_keys = ['vm1',]
     #TODO Parse the job file first
@@ -168,48 +190,59 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
     print('Created {0}'.format(seed_dir))
     os.system('chmod 0777 %s' % seed_dir)
     dirs_to_delete.append(seed_dir)
-    meta = os.path.join(seed_dir, 'meta')
-    os.makedirs(meta)
-    print("Generating SSH keys")
-    private_key, public_key, KEY = generate_sshkey()
-    create_user_data(seed_dir, "passw0rd")
-    create_ssh_metadata(seed_dir, public_key, private_key)
-    create_seed_img(meta, seed_dir)
-    seed_image = os.path.join(seed_dir, 'seed.img')
+    if 'key' not in config['general']:
+        # Then we create key and metadata
+        meta = os.path.join(seed_dir, 'meta')
+        os.makedirs(meta)
+        print("Generating SSH keys")
+        private_key, public_key, KEY = generate_sshkey()
+        create_user_data(seed_dir, "passw0rd")
+        create_ssh_metadata(seed_dir, public_key, private_key)
+        create_seed_img(meta, seed_dir)
+        seed_image = os.path.join(seed_dir, 'seed.img')
 
-    # We will copy the seed in every vm run dir
-    pkey = create_rsa_key(private_key)
+        # We will copy the seed in every vm run dir
+        pkey = create_rsa_key(private_key)
 
     try:
         for vm_c in vm_keys:
             # Now create each vm one by one.
             # Get the current ips
-            current_d = tempfile.mkdtemp()
-            print('Created {0}'.format(current_d))
-            os.system('chmod 0777 %s' % current_d)
-            dirs_to_delete.append(current_d)
-            system('cp  {0} {1}'.format(seed_image, current_d))
-            # Next copy the qcow2 image
-            image_path = config[vm_c].get('image')
-            os.system('cp {0} {1}'.format(image_path, current_d))
-            image = os.path.join(current_d, os.path.basename(image_path))
+            this_vm = {}
+            if 'ip' not in config[vm_c]:
+                current_d = tempfile.mkdtemp()
+                print('Created {0}'.format(current_d))
+                os.system('chmod 0777 %s' % current_d)
+                dirs_to_delete.append(current_d)
+                system('cp  {0} {1}'.format(seed_image, current_d))
+                # Next copy the qcow2 image
+                image_path = config[vm_c].get('image')
+                os.system('cp {0} {1}'.format(image_path, current_d))
+                image = os.path.join(current_d, os.path.basename(image_path))
 
-            vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu='1')
-            this_vm = {'process': vm, 'mac': mac}
-            print("We will wait for 45 seconds for the image to boot up.")
-            time.sleep(45)
-            latest_ip = scan_arp(mac)
-            if not latest_ip:
-                fault_in_ip_addr = True
-                break
-            this_vm['ip'] = latest_ip
-            this_vm['host_string'] = latest_ip
+                vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu='1')
+                this_vm.update({'process': vm, 'mac': mac})
+                print("We will wait for 45 seconds for the image to boot up.")
+                time.sleep(45)
+                latest_ip = scan_arp(mac)
+                if not latest_ip:
+                    fault_in_ip_addr = True
+                    break
+                this_vm['ip'] = latest_ip
+                this_vm['host_string'] = latest_ip
+                this_vm['pkey'] = pkey
+            else:
+                this_vm['ip'] = config[vm_c].get('ip')
+                this_vm['host_string'] = config[vm_c].get('ip')
+                this_vm['pkey'] = config['general']['pkey']
+
             this_vm['user'] = config[vm_c].get('user')
             if 'hostname' in config[vm_c]:
                 this_vm['hostname'] = config[vm_c].get('hostname')
-            this_vm['pkey'] = pkey
+
             vms[vm_c] = this_vm
 
+        vms['general'] = config['general']
         if fault_in_ip_addr:
             print('Oops no IP for this vm.')
             raise IPException
@@ -218,7 +251,9 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
         if debug:
             pprint(vms)
         print(' ')
-        inject_ip_to_vms(vms, private_key)
+        only_vms = vms.copy()
+        del only_vms['general']
+        inject_ip_to_vms(only_vms, private_key)
         ansible_flag = config.get('general').get('ansible_dir', None)
         if ansible_flag:
             dir_to_copy = ansible_flag
@@ -234,6 +269,14 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
         # This is where we test
 
         status = run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir)
+    except Exception as e:
+        import traceback
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        print "*** print_tb:"
+        traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+        print "*** print_exception:"
+        traceback.print_exception(exc_type, exc_value, exc_traceback,
+                              limit=2, file=sys.stdout)
 
     finally:
         if debug:
@@ -250,8 +293,10 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             with open(filename, 'w') as fobj:
                 for k, v in vms.iteritems():
                     fobj.write('{0}={1}\n'.format(k,v['ip']))
-            return # Do not destroy for debug case
+            return status # Do not destroy for debug case
         for vm in vms.values():
+            if not 'process' in vm: # For remote vm/bare metal
+                continue
             job_pid = vm['process'].pid
             if debug:
                 print('Killing {0}'.format(job_pid))

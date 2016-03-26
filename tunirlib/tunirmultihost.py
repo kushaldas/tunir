@@ -16,14 +16,29 @@ from .tunirutils import IPException
 from .testvm import  create_user_data, create_seed_img
 
 def true_test(vms, private_key, command='cat /proc/cpuinfo'):
+    """
+    Runs a given command to the list of vms. Currently using it
+    to push the list of vms/ips to the /etc/hosts files.
+
+    :param vms: Dictionary of the VM(s) with ip addresses to work on
+    :param private_key: String version of the private key to ssh
+    :param command: The actual command to run.
+    :return: None
+    """
     "Just to test the connection of a vm"
-    fobj = cStringIO.StringIO(private_key)
-    key = RSAKey(file_obj=fobj)
+    key = create_rsa_key(private_key)
     for vm in vms.values():
         res = run(vm['ip'],22,user=vm['user'], command=command,pkey=key, debug=False)
 
 def inject_ip_to_vms(vms, private_key):
-    "Updates each vm's /etc/hosts file with IP addresses"
+    """
+    Updates each vm's /etc/hosts file with IP addresses.
+
+    :param vms: Dictionary of VM(s)/IPs
+    :param private_key: String version of the private key
+    :return: None
+    """
+
     text = "\n"
     for k, v in vms.iteritems():
         line = ''
@@ -36,6 +51,10 @@ def inject_ip_to_vms(vms, private_key):
     true_test(vms, private_key, """sudo sh -c 'echo -e "{0}" >> /etc/hosts'""".format(text))
 
 def create_rsa_key(private_key):
+    """ Creates the RSAKey for paramiko.
+    :param private_key: String version of the private key
+    :return: The RSAKey object to be used in paramiko
+    """
     fobj = cStringIO.StringIO(private_key)
     key = RSAKey(file_obj=fobj)
     return key
@@ -48,20 +67,6 @@ def generate_sshkey(bits=2048):
     public_key = key.publickey().exportKey("OpenSSH")
     private_key = key.exportKey("PEM")
     return private_key, public_key, key
-
-def scan_nmap():
-    """Finds all the ips from the nmap -sn 192.168.122.* output.
-    :returns: List of ips
-    """
-    print('Scanning ips.')
-    output, err, eid = system('nmap -sn 192.168.122.*')
-    lines = output.split('\n')
-    ips = []
-    for line in lines:
-        if line.startswith('Nmap scan report for'):
-            ip = line.split(' ')[-1]
-            ips.append(ip)
-    return ips
 
 def scan_arp(macaddr):
     "Find the ip for the given mac addr"
@@ -87,6 +92,10 @@ def read_multihost_config(filepath):
     return result
 
 def random_mac():
+    """
+    Generates a random MAC address
+    :return: A string containing the random MAC address.
+    """
     mac = [ 0x00, 0x16, 0x3e,\
         random.randint(0x00, 0x7f),\
         random.randint(0x00, 0xff),\

@@ -182,7 +182,8 @@ def vagrant_and_run(config):
                 provider=config.get('provider', 'libvirt'))
     if v.keys: # Means we have the box up, and also the ssh config
         config['host_string'] = v.keys['HostName']
-        config['key'] = v.keys['IdentityFile']
+        config['ip'] = v.keys['HostName']
+        config['key'] = v.keys['IdentityFile'].strip('"')
         config['port'] = v.keys['Port']
 
     return v, config

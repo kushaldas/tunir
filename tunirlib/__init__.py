@@ -50,9 +50,10 @@ def main(args):
     # For multihost
     if args.multi:
         jobpath = os.path.join(args.config_dir, args.multi + '.txt')
-        start_multihost(args.multi, jobpath, debug)
+        status = start_multihost(args.multi, jobpath, debug)
         os.system('stty sane')
-        return
+        if status:
+            sys.exit(0)
     if args.job:
         job_name = args.job
     else:
@@ -72,9 +73,6 @@ def main(args):
         os.system('stty sane')
         sys.exit(status)
 
-    if config['type'] == 'docker':
-        container = Docker(config['image'])
-
     if config['type'] == 'vagrant':
         vagrant, config = vagrant_and_run(config)
         if vagrant.failed:
@@ -89,7 +87,7 @@ def main(args):
 
     try:
         if run_job_flag:
-            status = run_job(jobpath, job_name, config, container, port)
+            status = start_multihost(job_name, jobpath, debug, config, args.config_dir)
             if status:
                 return_code = 0
     finally:

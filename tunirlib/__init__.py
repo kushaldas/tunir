@@ -74,8 +74,8 @@ def main(args):
         sys.exit(status)
 
     if config['type'] == 'vagrant':
-        vagrant, config = vagrant_and_run(config)
-        if vagrant.failed:
+        node, config = vagrant_and_run(config)
+        if node.failed:
             run_job_flag = False
 
     elif config['type'] == 'aws':
@@ -91,13 +91,8 @@ def main(args):
             if status:
                 return_code = 0
     finally:
-        # Now let us kill the kvm process
-        if vagrant:
-            print "Removing the box."
-            vagrant.destroy()
-        elif node:
-            node.destroy()
-            #print "Not destorying the node", node
+        # Destroy and remove the Vagrant box or AWS instance
+        node.destroy()
 
         sys.exit(return_code)
 

@@ -109,4 +109,5 @@ def aws_and_run(config):
                    config.get('virt_type', 'paravirtual'))
     if not node.failed:  # Means we have an ip
         config['host_string'] = node.ip
+        config['ip'] = node.ip
     return node, config

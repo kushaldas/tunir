@@ -172,7 +172,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             config['general']['pkey'] = create_rsa_key(data)
             private_key = data
             config['general']['keypath'] = config['general']['key']
-    else: # For a single vm job
+    else: # For a single vm job or Vagrant or AWS
         config = {'vm1': oldconfig}
         config['general'] = {'ansible_dir': oldconfig.get('ansible_dir', None)}
         if 'key' in oldconfig:

@@ -67,11 +67,11 @@ class Vagrant(object):
     """
     Returns a Vagrant object.
     """
-    def __init__(self, image_url, name='tunir-box', memory=1024, provider='libvirt'):
+    def __init__(self, image_url, name='tunir-box', memory=1024, provider='libvirt', path='/var/run/tunir/'):
         self.original_path = os.path.abspath(os.path.curdir)
         self.name = name
         self.image_url = image_url
-        self.path = '/var/run/tunir/'
+        self.path = path
         self.keys = None
         self.failed = False
         self.provider = provider
@@ -170,16 +170,15 @@ end'''
             refresh_vol_pool() # Remove libvirt cache
         os.chdir(self.original_path)
 
-def vagrant_and_run(config):
+def vagrant_and_run(config, path='/var/run/tunir/'):
     """
     This starts the vagrant box
 
     :param config: Our config object
     :return: (Vagrant, config) config object with IP, and key file
     """
-
     v = Vagrant(config['image'], memory=config['ram'],
-                provider=config.get('provider', 'libvirt'))
+                provider=config.get('provider', 'libvirt'), path=path)
     if v.keys: # Means we have the box up, and also the ssh config
         config['host_string'] = v.keys['HostName']
         config['ip'] = v.keys['HostName']

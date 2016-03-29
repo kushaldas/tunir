@@ -73,6 +73,7 @@ class TunirTests(unittest.TestCase):
         self.assertTrue(os.path.exists(new_inventory))
         with open(new_inventory) as fobj:
             data = fobj.read()
+        tunirutils.clean_tmp_dirs([tdir,])
         self.assertIn('vm2 ansible_ssh_host=192.168.1.102 ansible_ssh_user=fedora\n', data)
         self.assertIn('vm1 ansible_ssh_host=192.168.1.100 ansible_ssh_user=fedora\n', data)
         self.assertIn('[web]\nvm1\nvm2', data)

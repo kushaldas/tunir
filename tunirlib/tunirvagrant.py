@@ -46,6 +46,20 @@ def refresh_vol_pool():
                 if words[0].startswith('tunir-box'):
                     system('virsh vol-delete {0} default'.format(words[0]))
 
+def refresh_storage_pool():
+    '''Refreshes libvirt storage pool.
+
+    http://kushaldas.in/posts/storage-volume-error-in-libvirt-with-vagrant.html
+    '''
+    out, err, retcode = system('virsh pool-list')
+    lines = out.split('\n')
+    if len(lines) > 2:
+        for line in lines[2:]:
+            words = line.split()
+            if len(words) == 3:
+                if words[1] == 'active':
+                    system('virsh pool-refresh {0}'.format(words[0]))
+
 
 def parse_ssh_config(text):
     """
@@ -111,6 +125,7 @@ end'''
 
         basename = os.path.basename(image_url)
 
+        refresh_storage_pool()
 
         print "Adding vagrant box."
         cmd = 'vagrant box add {0} --name {1}'.format(image_url, name)

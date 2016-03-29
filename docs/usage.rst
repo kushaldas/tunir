@@ -50,6 +50,27 @@ versa. For each run Tunir creates a new RSA keypair, and pushes the public key t
 vm, and uses the private key to do ssh based authentication.
 
 
+Debugging test vm(s)
+---------------------
+
+.. versionadded:: 0.14
+
+This can also be used a quick way to get a few vm(s) up. While using multivm configuration,
+one can pass **--debug** command line argument, and this will make sure that the vm(s) do not
+get destroyed at the end of the tests. It will create a *destroy.sh* file, and print the path
+at the end of the run. All the vm(s) will be in running condition. You can ssh into them by
+using *private.key* file found in the same directory of the *destroy.sh*.
+
+When your debugging is done, you can execute the shell script to clean up all the running instances
+and any temporary file created by the previous run.
+
+::
+
+    # sh /tmp/tmpXYZ/destroy.sh
+
+.. warning:: The private key remains on the disk while running Tunir in the debug mode. Please remember
+   to execute the destroy.sh script to clean up afterwards.
+
 jobname.json
 -------------
 

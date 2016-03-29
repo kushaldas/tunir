@@ -10,8 +10,8 @@ Fedora project. While doing so, I figured out that most of it can be automated
 if we have a system to create/maintain/terminate cloud instances. Of course I
 do not want any actual cloud, it will be a different monster to maintain.
 
-This is the point where I came up with Tunir. Tunir is a simple continuous integration (CI) system that will help
-me run automated tests for the cloud images. I kept the system generic enough
-to execute any kind of tests people want.
+This is the point where I came up with Tunir. Tunir is a simple testing tool
+that will help me run automated tests for the cloud images. I kept the system
+generic enough to execute any kind of tests people want.
 
 The configuration is very minimal with Tunir.

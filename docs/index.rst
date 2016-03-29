@@ -6,7 +6,7 @@
 Welcome to Tunir
 ================
 
-Tunir is a simple continuous integration (CI) system. The goal is to have a system which is
+Tunir is a simple testing tool. The goal is to have a system which is
 simple to setup, and easy to maintain.
 
 Contents:

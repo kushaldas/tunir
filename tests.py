@@ -54,6 +54,15 @@ class TunirTests(unittest.TestCase):
         self.assertEqual(2048, data["ram"], "Missing ram information")
 
 
+    def test_match_vm_numbers(self):
+        path = './testvalues/multihost.txt'
+        vms = ['vm1', 'vm2']
+        self.assertTrue(tunirutils.match_vm_numbers(vms, path))
+        vms = ['vm1',]
+        with captured_output() as (out, err):
+            self.assertFalse(tunirutils.match_vm_numbers(vms, path))
+            self.assertIn('vm2', out.getvalue())
+
 class ExecuteTests(unittest.TestCase):
     """
     Tests the execute function.

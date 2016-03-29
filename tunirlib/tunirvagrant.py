@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 "Tunir module to talk to Vagrant"
 
-# Copyright © 2015  Kushal Das <kushaldas@gmail.com>
+# Copyright © 2015-2016  Kushal Das <kushaldas@gmail.com>
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -113,6 +113,7 @@ end'''
         self.vagrantfile = None
         if self.provider == 'libvirt':
             self.vagrantfile = libvirt_config
+            refresh_storage_pool()
         else:
             self.vagrantfile = virtualbox_config
         os.chdir(self.path)
@@ -125,7 +126,6 @@ end'''
 
         basename = os.path.basename(image_url)
 
-        refresh_storage_pool()
 
         print "Adding vagrant box."
         cmd = 'vagrant box add {0} --name {1}'.format(image_url, name)

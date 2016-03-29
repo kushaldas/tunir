@@ -23,6 +23,8 @@ steps for testing.
 jobname.cfg
 --------------
 
+.. versionadded:: 0.14
+
 The following example contains a job where we are creating two vms from the given image
 files. The images can be either standard cloud image, or Atomic image. We generate ssh
 keys for each run, and use that to login to the box.
@@ -116,6 +118,8 @@ Example::
 For multivm configurations
 ###########################
 
+.. versionadded:: 0.14
+
 In case where we are dealing with multiple vms using .cfg file in our configuration,
 we prefix each line with the vm name (like vm1, vm2, vm3). This marks which command
 to run on which vm. The tool first checks the available vm names to these marks in the
@@ -134,6 +138,8 @@ executed on vm2.
 
 Using Ansible
 --------------
+
+.. versionadded:: 0.14
 
 Along with multivm configuration we got a new feature of using
 `Ansible <https://www.ansible.com/>`_ to configure the vm(s) we create. To do so,

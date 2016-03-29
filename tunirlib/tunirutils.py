@@ -7,10 +7,17 @@ import paramiko
 import socket
 import codecs
 import subprocess
-from tunirdocker import Result
 from collections import OrderedDict
 
 STR = OrderedDict()
+
+class Result(str):
+    """
+    To hold results from sshcommand executions.
+    """
+    @property
+    def stdout(self):
+        return str(self)
 
 def match_vm_numbers(vm_keys, jobpath):
     """Matches vm definations mentioned in config, and in the job file.

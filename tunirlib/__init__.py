@@ -4,9 +4,8 @@ import json
 import argparse
 from tunirvagrant import vagrant_and_run
 from tuniraws import aws_and_run
-from tunirdocker import Docker, Result
 from tunirmultihost import start_multihost
-from tunirutils import run_job
+from tunirutils import run_job, Result
 from collections import OrderedDict
 
 STR = OrderedDict()
@@ -31,15 +30,8 @@ def read_job_configuration(jobname='', config_dir='./'):
 def main(args):
     "Starting point of the code"
     job_name = ''
-    vm = None
     node = None
-    port = None
-    temp_d = None
-    container = None
-    atomic = False
     debug = False
-    image_dir = ''
-    vagrant = None
     return_code = -100
     run_job_flag = True
 

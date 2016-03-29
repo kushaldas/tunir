@@ -1,15 +1,13 @@
 import os
 import unittest
 import sys
-
+import tempfile
 from collections import OrderedDict
 from contextlib import contextmanager
 from StringIO import StringIO
-
 from mock import patch
 
 import tunirlib
-
 from tunirlib.tunirutils import Result, system
 from tunirlib import main
 from tunirlib import tunirutils
@@ -62,6 +60,22 @@ class TunirTests(unittest.TestCase):
         with captured_output() as (out, err):
             self.assertFalse(tunirutils.match_vm_numbers(vms, path))
             self.assertIn('vm2', out.getvalue())
+
+    def test_ansible(self):
+        vms = {'vm1': {'ip': '192.168.1.100', 'user':'fedora'},\
+               'vm2': {'ip': '192.168.1.102', 'user':'fedora'}}
+        tdir = tempfile.mkdtemp()
+        new_inventory = os.path.join(tdir, 'tunir_ansible')
+        old_inventory = os.path.join(tdir, 'inventory')
+        with open(old_inventory, 'w') as fobj:
+            fobj.write('[web]\nvm1\nvm2')
+        tunirutils.create_ansible_inventory(vms, new_inventory)
+        self.assertTrue(os.path.exists(new_inventory))
+        with open(new_inventory) as fobj:
+            data = fobj.read()
+        self.assertIn('vm2 ansible_ssh_host=192.168.1.102 ansible_ssh_user=fedora\n', data)
+        self.assertIn('vm1 ansible_ssh_host=192.168.1.100 ansible_ssh_user=fedora\n', data)
+        self.assertIn('[web]\nvm1\nvm2', data)
 
 class ExecuteTests(unittest.TestCase):
     """

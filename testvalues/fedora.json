@@ -1,0 +1,8 @@
+{
+  "name": "fedora",
+  "type": "vm",
+  "image": "/home/Fedora-Cloud-Atomic-22-20151026.x86_64.qcow2",
+  "ram": 2048,
+  "user": "fedora",
+  "timeout": 30
+}

@@ -5,12 +5,12 @@ import tempfile
 from collections import OrderedDict
 from contextlib import contextmanager
 from StringIO import StringIO
-from mock import patch
+from mock import patch, Mock
 
 import tunirlib
 from tunirlib.tunirutils import Result, system
 from tunirlib import main
-from tunirlib import tunirutils
+from tunirlib import tunirutils, tunirmultihost
 
 @contextmanager
 def captured_output():
@@ -78,6 +78,54 @@ class TunirTests(unittest.TestCase):
         self.assertIn('vm1 ansible_ssh_host=192.168.1.100 ansible_ssh_user=fedora\n', data)
         self.assertIn('[web]\nvm1\nvm2', data)
 
+
+    @patch('tunirlib.tunirutils.run')
+    @patch('codecs.open')
+    @patch('subprocess.call')
+    @patch('subprocess.Popen')
+    @patch('os.system')
+    @patch('time.sleep')
+    @patch('sys.exit')
+    @patch('os.kill')
+    @patch('paramiko.SSHClient')
+    @patch('tunirlib.tunirmultihost.boot_qcow2')
+    def test_multihost(self,p_br,p_sc,p_kill, p_exit, p_sleep, p_system,p_usystem, p_scall, p_codecs,p_run):
+        res = StupidProcess()
+        p_br.side_effect = [(res, 'ABCD'),(res,'XYZ')]
+
+        r1 = Result("result1")
+        r1.return_code = 0
+        r2 = Result("result2")
+        r2.return_code = 0
+        r3 = Result("result3")
+        r3.return_code = 0
+        values = [r1, r2, r3]
+        p_run.side_effect = values
+
+        c1 = Mock()
+        c1.communicate.return_value = ('192.168.1.100','')
+        c1.return_code = 0
+        c2 = Mock()
+        c2.communicate.return_value = ('? (192.168.122.100) at ABCD [ether] on virbr0\n? (192.168.122.116) at 00:16:3e:33:ba:a2 [ether] on virbr0','')
+        c2.return_code = 0
+        c3 = Mock()
+        c3.communicate.return_value = ('h','h')
+        c3.return_code = 0
+        c4 = Mock()
+        c4.communicate.return_value = ('? (192.168.122.102) at XYZ [ether] on virbr0\n? (192.168.122.116) at 00:16:3e:33:ba:a2 [ether] on virbr0','')
+        c4.return_code = 0
+        p_usystem.side_effect = [c1,c2,c3,c4]
+
+
+        with captured_output() as (out, err):
+            tunirmultihost.start_multihost('multihost', './testvalues/multihost.txt', False)
+
+            #self.assertIn("Passed:1", out.getvalue())
+            #self.assertIn("Job status: True", out.getvalue())
+        for calls,vals in zip(p_run.mock_calls,(('192.168.122.100', '22', 'fedora', None, 'sudo su -c"echo Hello > /abcd.txt"'),('192.168.122.102', '22', 'fedora', None, 'ls /'),('192.168.122.100', '22', 'fedora', None, 'cat /etc/os-release'))):
+            self.assertEqual(calls[1],vals)
+
+
 class ExecuteTests(unittest.TestCase):
     """
     Tests the execute function.
@@ -139,87 +187,6 @@ class UpdateResultTest(unittest.TestCase):
         for out, result in zip(tunirlib.STR.iteritems(), res):
             self.assertEqual(out[1]['status'], result)
 
-
-class TestVmTest(unittest.TestCase):
-    """
-    Tests the testvm module.
-    """
-
-    @patch('subprocess.call')
-    def test_metadata_userdata(self, s_call):
-        """
-        Tests metadata and userdata creation
-        """
-        path = '/tmp/test_tunir'
-        seed_path = '/tmp/test_tunir/seed.img'
-        meta_path = '/tmp/test_tunir/meta/'
-        metadata_filepath = '/tmp/test_tunir/meta/meta-data'
-        userdata_filepath = '/tmp/test_tunir/meta/user-data'
-        testvm.clean_dirs(path)
-        testvm.create_dirs(os.path.join(path, 'meta'))
-        base_path = path
-        testvm.create_user_data(base_path, "passw0rd")
-        testvm.create_meta_data(base_path, "test_tunir")
-        self.assertTrue(os.path.exists(metadata_filepath))
-        self.assertTrue(os.path.exists(userdata_filepath))
-        testvm.create_seed_img(meta_path, path)
-        self.assertTrue(os.path.exists(seed_path))
-        s_call.assert_called_once_with(['virt-make-fs',
-                                  '--type=msdos',
-                                  '--label=cidata',
-                                  meta_path,
-                                  path + '/seed.img'])
-        testvm.clean_dirs(path)
-
-
-
-    @patch('subprocess.Popen')
-    def test_boot_image(self, s_popen):
-        res = StupidProcess()
-        s_popen.return_value = res
-
-        path = '/tmp/test_tunir'
-        seed_path = '/tmp/test_tunir/seed.img'
-        with captured_output() as (out, err):
-            tunirutils.boot_image('/tmp/test_tunir/test.qcow2', seed_path)
-        self.assertIn("PID: 42", out.getvalue())
-
-
-
-class TestMain(unittest.TestCase):
-
-    def setUp(self):
-        meta_path = '/tmp/test_tunir/meta'
-        if not os.path.exists(meta_path):
-            os.mkdir(meta_path)
-
-    @patch('time.sleep')
-    @patch('sys.exit')
-    @patch('os.kill')
-    @patch('tunirlib.run')
-    @patch('tunirlib.build_and_run')
-    def test_main(self,p_br, p_run,p_kill, p_exit, p_sleep):
-        res = StupidProcess()
-        p_br.return_value = res
-
-        r1 = Result("result1")
-        r1.return_code = 0
-        r2 = Result("result2")
-        r2.return_code = 0
-        values = [r1, r2]
-        p_run.side_effect = values
-
-        # Now let us construct the args
-        args = StupidArgs()
-        with captured_output() as (out, err):
-            main(args)
-            self.assertIn("Passed:1", out.getvalue())
-            self.assertIn("Job status: True", out.getvalue())
-        self.assertTrue(p_kill.called)
-        self.assertTrue(p_exit.called)
-
-    def tearDown(self):
-        system('rm -rf /tmp/test_tunir')
 
 if __name__ == '__main__':
     unittest.main()

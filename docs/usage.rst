@@ -169,6 +169,8 @@ Example configuration
 
 In the above example we are creating 3 vm(s) with given hostnames.
 
+.. note:: Right now all vm(s) will be using only 1 CPU. This will be changed in the future releaes.
+
 How to execute the playbook(s)?
 --------------------------------
 
@@ -181,6 +183,31 @@ In the *jobname.txt* you should have a **PLAYBOOK** command as given below
 
 In this example we are running a playbook called *atom.yml*, and then in the vm1 we
 are using atomicapp to start a nulecule app :)
+
+
+Execute tests on multiple pre-defined VM(s) or remote machines
+---------------------------------------------------------------
+
+::
+
+    [general]
+    cpu = 1
+    ram = 1024
+    ansible_dir = /home/user/contrib/ansible
+    pkey = /home/user/.ssh/id_rsa
+
+    [vm1]
+    user = fedora
+    ip = 192.168.122.100
+
+    [vm2]
+    user = fedora
+    ip = 192.168.122.101
+
+    [vm3]
+    user = fedora
+    ip = 192.168.122.102
+
 
 Example of configuration file to run the tests on a remote machine
 -------------------------------------------------------------------

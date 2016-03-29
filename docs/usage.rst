@@ -46,7 +46,8 @@ keys for each run, and use that to login to the box.
 The above configuration file is self explanatory.
 Each of the vm(s) created from the above configuration will get all the other vms' IP
 details in the */etc/hosts* along with vm name. Means *vm1* can ping *vm2* and vice
-versa.
+versa. For each run Tunir creates a new RSA keypair, and pushes the public key to each
+vm, and uses the private key to do ssh based authentication.
 
 
 jobname.json
@@ -156,21 +157,21 @@ Example configuration
     [general]
     cpu = 1
     ram = 1024
-    ansible_dir = /root/contrib/ansible
+    ansible_dir = /home/user/contrib/ansible
 
     [vm1]
     user = fedora
-    image = /root/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
+    image = /home/user/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
     hostname = kube-master.example.com
 
     [vm2]
     user = fedora
-    image = /root/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
+    image = /home/user/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
     hostname = kube-node-01.example.com
 
     [vm3]
     user = fedora
-    image = /root/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
+    image = /home/user/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
     hostname = kube-node-02.example.com
 
 In the above example we are creating 3 vm(s) with given hostnames.

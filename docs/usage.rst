@@ -197,7 +197,7 @@ Example configuration
 
 In the above example, we are creating 3 vm(s) with given hostnames.
 
-.. note:: Right now all vm(s) will be using only 1 CPU. This will be changed in the future releaes.
+.. note:: If the number of CPU is not mentioned in the general section, Tunir will get 1 virtual CPU for the vm.
 
 How to execute the playbook(s)?
 --------------------------------

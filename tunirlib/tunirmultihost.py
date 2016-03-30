@@ -304,6 +304,8 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             filename = os.path.join(seed_dir, 'destroy.sh')
             with open(filename, 'w') as fobj:
                 for vm in only_vms.values():
+                    if not 'process' in vm: # For remote vm/bare metal
+                        continue
                     job_pid = vm['process'].pid
                     fobj.write('kill -9 {0}\n'.format(job_pid))
                 for d in dirs_to_delete:

@@ -4,9 +4,10 @@ AWS support
 .. note:: New feature from 0.13 release
 
 Now we have support to use AWS for testing using Tunir. We can have both HVM,
-and paravirtual types of instances to run the test. You will require [Python
-libcloud](https://libcloud.apache.org/) for the same.
+and paravirtual types of instances to run the test. You will require `Python
+libcloud <https://libcloud.apache.org/>`_ for the same.
 
+.. note:: It boots up the instances in us-west-1 zone.
 
 Example of HVM
 ---------------

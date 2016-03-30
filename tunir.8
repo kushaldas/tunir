@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "March 30, 2016" "0.14" "Tunir"
+.TH "TUNIR" "8" "March 30, 2016" "0.15" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -82,9 +82,9 @@ paramiko
 .IP \(bu 2
 vagrant\-libvirt
 .IP \(bu 2
-net\-tools
+pycrypto
 .IP \(bu 2
-docker  (optional)
+net\-tools
 .IP \(bu 2
 Ansible (optional)
 .UNINDENT
@@ -95,7 +95,7 @@ You can install them in Fedora by the following command:
 .sp
 .nf
 .ft C
-$ sudo dnf install libguestfs\-tools python\-paramiko docker\-io vagrant\-libvirt ansible net\-tools
+$ sudo dnf install libguestfs\-tools python\-paramiko docker\-io vagrant\-libvirt ansible net\-tools python\-crypto
 .ft P
 .fi
 .UNINDENT
@@ -152,6 +152,20 @@ Each of the vm(s) created from the above configuration will get all the other vm
 details in the \fI/etc/hosts\fP along with vm name. Means \fIvm1\fP can ping \fIvm2\fP and vice
 versa. For each run, Tunir creates a new RSA key pair and pushes the public key to each
 vm, and uses the private key to do ssh based authentication.
+.SS How to execute a multivm job?
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo tunir \-\-multi jobname
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The above commands expects a \fBjobname.cfg\fP, and a \fBjobname.txt\fP containing the commands,
+in the current directory. You can see below for an example of \fBjobname.txt\fP\&.
 .SS Debugging test vm(s)
 .sp
 New in version 0.14.

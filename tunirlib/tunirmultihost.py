@@ -284,7 +284,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
                 dir_to_copy += '*'
             os.system('cp -r {0} {1}'.format(dir_to_copy, seed_dir))
             ansible_inventory_path = os.path.join(seed_dir, 'tunir_ansible')
-            create_ansible_inventory(vms, ansible_inventory_path)
+            create_ansible_inventory(only_vms, ansible_inventory_path)
 
 
         # This is where we test
@@ -303,7 +303,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
         if debug:
             filename = os.path.join(seed_dir, 'destroy.sh')
             with open(filename, 'w') as fobj:
-                for vm in vms.values():
+                for vm in only_vms.values():
                     job_pid = vm['process'].pid
                     fobj.write('kill -9 {0}\n'.format(job_pid))
                 for d in dirs_to_delete:
@@ -312,10 +312,10 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             # Put the ip/hostnames into a text file
             filename = os.path.join(seed_dir, 'hostnames.txt')
             with open(filename, 'w') as fobj:
-                for k, v in vms.iteritems():
+                for k, v in only_vms.iteritems():
                     fobj.write('{0}={1}\n'.format(k,v['ip']))
             return status # Do not destroy for debug case
-        for vm in vms.values():
+        for vm in only_vms.values():
             if not 'process' in vm: # For remote vm/bare metal
                 continue
             job_pid = vm['process'].pid

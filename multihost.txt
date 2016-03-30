@@ -1,0 +1,3 @@
+vm1 cat /proc/cpuinfo
+vm2 cat /proc/cpuinfo
+vm1 free -m

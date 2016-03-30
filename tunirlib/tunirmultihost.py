@@ -28,7 +28,16 @@ def true_test(vms, private_key, command='cat /proc/cpuinfo'):
     "Just to test the connection of a vm"
     key = create_rsa_key(private_key)
     for vm in vms.values():
-        res = run(vm['ip'],22,user=vm['user'], command=command,pkey=key, debug=False)
+        for i in range(5):
+            try:
+                res = run(vm['ip'],22,user=vm['user'], command=command,pkey=key, debug=False)
+                break
+            except Exception as e:
+                print("Try {0} failed for IP injection to /etc/hosts.".format(i))
+                if i == 4: # If it does not allow in 2 minutes, something is super wrong
+                    raise e
+                time.sleep(30)
+                continue
 
 def inject_ip_to_vms(vms, private_key):
     """

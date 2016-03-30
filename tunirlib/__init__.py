@@ -35,17 +35,17 @@ def main(args):
     return_code = -100
     run_job_flag = True
 
-    if args.atomic:
-        atomic = True
     if args.debug:
         debug = True
     # For multihost
     if args.multi:
         jobpath = os.path.join(args.config_dir, args.multi + '.txt')
-        status = start_multihost(args.multi, jobpath, debug, args.config_dir)
+        status = start_multihost(args.multi, jobpath, debug, config_dir=args.config_dir)
         os.system('stty sane')
         if status:
             sys.exit(0)
+        else:
+            sys.exit(2)
     if args.job:
         job_name = args.job
     else:
@@ -91,14 +91,11 @@ def main(args):
 
 def startpoint():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--job", help="The job configuration name to run")
-    parser.add_argument("--stateless", help="Do not store the result, just print it in the STDOUT.", action='store_true')
+    parser.add_argument("--job", help="The job configuration name to run for JSON format file.")
     parser.add_argument("--config-dir", help="Path to the directory where the job config and commands can be found.",
                         default='./')
-    parser.add_argument("--image-dir", help="Path to the directory where vm images will be held")
-    parser.add_argument("--atomic", help="We are using an Atomic image.", action='store_true')
     parser.add_argument("--debug", help="Keep the vms running for debug in multihost mode.", action='store_true')
-    parser.add_argument("--multi", help="The multihost configuration")
+    parser.add_argument("--multi", help="The multivm configuration using .cfg configuration file")
     args = parser.parse_args()
 
     main(args)

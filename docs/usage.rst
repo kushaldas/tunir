@@ -11,12 +11,12 @@ file located at '/var/run/tunir/tunir_results.txt'.
 Configuring a new job
 ----------------------
 
-There are two different kinds of job configuration files, the newer one is multivm config
-which can take any qcow2 image and use them to boot up one or more vms. The other option
-is to use a json file based configuration which can be used for vm(s), vagrant images, or
+There are two different kinds of job configuration files, the newer one is Multi-VM config
+which can take any qcow2 image and use them to boot up one or more VMs. The other option
+is to use a JSON file based configuration which can be used for vm(s), vagrant images, or
 bare metal remote system based testing.
 
-For a multivm configuration for a job called **default** create **default.cfg** file as
+For a Multi-VM configuration for a job called **default** create **default.cfg** file as
 explained below. We will also require another **default.txt** file which will contain the
 steps for testing.
 
@@ -25,7 +25,7 @@ jobname.cfg
 
 .. versionadded:: 0.14
 
-The following example contains a job where we are creating two vms from the given image
+The following example contains a job where we are creating two VMs from the given image
 files. The images can be either standard cloud image, or Atomic image. We generate ssh
 keys for each run, and use that to login to the box.
 
@@ -43,10 +43,10 @@ keys for each run, and use that to login to the box.
     user = fedora
     image = /home/Fedora-Cloud-Base-20141203-21.x86_64.qcow2
 
-The above configuration file is self explanatory.
+The above configuration file is self-explanatory.
 Each of the vm(s) created from the above configuration will get all the other vms' IP
 details in the */etc/hosts* along with vm name. Means *vm1* can ping *vm2* and vice
-versa. For each run Tunir creates a new RSA keypair, and pushes the public key to each
+versa. For each run, Tunir creates a new RSA key pair and pushes the public key to each
 vm, and uses the private key to do ssh based authentication.
 
 
@@ -55,7 +55,7 @@ Debugging test vm(s)
 
 .. versionadded:: 0.14
 
-This can also be used a quick way to get a few vm(s) up. While using multivm configuration,
+This can also be used a quick way to get a few vm(s) up. While using Multi-VM configuration,
 one can pass **--debug** command line argument, and this will make sure that the vm(s) do not
 get destroyed at the end of the tests. It will create a *destroy.sh* file, and print the path
 at the end of the run. All the vm(s) will be in running condition. You can ssh into them by
@@ -96,10 +96,10 @@ type
     The type of system in which the tests will run. Possible values are vm, docker, bare.
 
 image
-    Path to the cloud image in case of a VM. You can provide docker image there for Docker based tests, or the ip/hostname of the bare metal box.
+    Path to the cloud image in case of a VM. You can provide docker image there for Docker-based tests, or the IP/hostname of the bare metal box.
 
 ram
-    The amount of RAM for the VM. Optional for bare or docker types.
+    The amount of RAM for the VM. Optional for bare or Docker types.
 
 user
     The username to connect to.
@@ -119,8 +119,8 @@ jobname.txt
 This text file contains the bash commands to run in the system, one command per line. In case you are
 rebooting the system, you may want to use **SLEEP NUMBER_OF_SECONDS** command there.
 
-If a command starts with @@ sign, it means the command is supposed to fail. Generally we check the return codes
-of the commands to find if it failed, or not. For Docker container based systems, we track the stderr output.
+If a command starts with @@ sign, it means the command is supposed to fail. Generally, we check the return codes
+of the commands to find if it failed, or not. For Docker container-based systems, we track the stderr output.
 
 We can also have non-gating tests, means these tests can pass or fail, but the whole job status will depend
 on other gating tests. Any command in jobname.txt starting with ## sign will mark the test as non-gating.
@@ -137,12 +137,12 @@ Example::
     SLEEP 40
     ls /etc
 
-For multivm configurations
+For Multi-VM configurations
 ###########################
 
 .. versionadded:: 0.14
 
-In case where we are dealing with multiple vms using .cfg file in our configuration,
+In case where we are dealing with multiple VMs using .cfg file in our configuration,
 we prefix each line with the vm name (like vm1, vm2, vm3). This marks which command
 to run on which vm. The tool first checks the available vm names to these marks in the
 *jobname.txt* file, and it will complain about any extra vm marked in there. If one
@@ -163,13 +163,13 @@ Using Ansible
 
 .. versionadded:: 0.14
 
-Along with multivm configuration we got a new feature of using
+Along with Multi-VM configuration, we got a new feature of using
 `Ansible <https://www.ansible.com/>`_ to configure the vm(s) we create. To do so,
-first create the required roles, and playbook in a given path. You can write down
+first, create the required roles, and playbook in a given path. You can write down
 the group of hosts with either naming like *vm1*, *vm2*, *vm3* or give them
-proper names like *kube-master.example.com*. For the second case we also have to
+proper names like *kube-master.example.com*. For the second case, we also have to
 pass these hostnames in each vm definition in the configuration file. We also
-provide the path of the directory containing all ansible details with *ansible_dir*
+provide the path to the directory containing all ansible details with *ansible_dir*
 value.
 
 Example configuration
@@ -195,7 +195,7 @@ Example configuration
     image = /home/user/Fedora-Cloud-Atomic-23-20160308.x86_64.qcow2
     hostname = kube-node-02.example.com
 
-In the above example we are creating 3 vm(s) with given hostnames.
+In the above example, we are creating 3 vm(s) with given hostnames.
 
 .. note:: Right now all vm(s) will be using only 1 CPU. This will be changed in the future releaes.
 
@@ -209,7 +209,7 @@ In the *jobname.txt* you should have a **PLAYBOOK** command as given below
     PLAYBOOK atom.yml
     vm1 sudo atomic run projectatomic/guestbookgo-atomicapp
 
-In this example we are running a playbook called *atom.yml*, and then in the vm1 we
+In this example, we are running a playbook called *atom.yml*, and then in the vm1 we
 are using atomicapp to start a nulecule app :)
 
 
@@ -276,7 +276,7 @@ You can actually provide a path to tunir so that it can pick up job configuratio
 Timeout issue
 --------------
 
-In case if one of the command fails to return within 10 minutes (600 seconds),
+In case if one of the commands fails to return within 10 minutes (600 seconds),
 tunir will fail the job with a timeout error. It will be marked at the end of
 the results. You can change the default value in the config file with a timeout
 key. In the below example I am having 300 seconds as timeout for each command.::

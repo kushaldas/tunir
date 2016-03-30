@@ -8,5 +8,7 @@ include default.json
 include default.txt
 include vgt.json
 include vgt.txt
+include multihost.txt
+include multihost.cfg
 include LICENSE
 include COPYING

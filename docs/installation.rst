@@ -22,13 +22,15 @@ We are currently depended on the following projects or libraries.
 - ansible
 - paramiko
 - vagrant-libvirt
+- pycrypto
 - net-tools
 - docker  (optional)
 - Ansible (optional)
 
 
+
 You can install them in Fedora by the following command::
 
-    $ sudo dnf install libguestfs-tools python-paramiko docker-io vagrant-libvirt ansible net-tools
+    $ sudo dnf install libguestfs-tools python-paramiko docker-io vagrant-libvirt ansible net-tools python-crypto
 
 

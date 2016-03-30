@@ -24,7 +24,6 @@ We are currently depended on the following projects or libraries.
 - vagrant-libvirt
 - pycrypto
 - net-tools
-- docker  (optional)
 - Ansible (optional)
 
 

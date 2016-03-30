@@ -49,6 +49,16 @@ details in the */etc/hosts* along with vm name. Means *vm1* can ping *vm2* and v
 versa. For each run, Tunir creates a new RSA key pair and pushes the public key to each
 vm, and uses the private key to do ssh based authentication.
 
+How to execute a multivm job?
+------------------------------
+
+::
+
+    $ sudo tunir --multi jobname
+
+The above commands expects a **jobname.cfg**, and a **jobname.txt** containing the commands,
+in the current directory. You can see below for an example of **jobname.txt**.
+
 
 Debugging test vm(s)
 ---------------------

@@ -231,6 +231,8 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
 
                 vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu='1')
                 this_vm.update({'process': vm, 'mac': mac})
+                # Let us get this vm in the tobe delete list even if the IP never comes up
+                vms[vm_c] = this_vm
                 print("We will wait for 45 seconds for the image to boot up.")
                 time.sleep(45)
                 latest_ip = scan_arp(mac)

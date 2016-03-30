@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "February 09, 2016" "0.13" "Tunir"
+.TH "TUNIR" "8" "March 30, 2016" "0.14" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -31,7 +31,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
 .sp
-Tunir is a simple continuous integration (CI) system. The goal is to have a system which is
+Tunir is a simple testing tool. The goal is to have a system which is
 simple to setup, and easy to maintain.
 .sp
 Contents:
@@ -46,9 +46,9 @@ Fedora project. While doing so, I figured out that most of it can be automated
 if we have a system to create/maintain/terminate cloud instances. Of course I
 do not want any actual cloud, it will be a different monster to maintain.
 .sp
-This is the point where I came up with Tunir. Tunir is a simple continuous integration (CI) system that will help
-me run automated tests for the cloud images. I kept the system generic enough
-to execute any kind of tests people want.
+This is the point where I came up with Tunir. Tunir is a simple testing tool
+that will help me run automated tests for the cloud images. I kept the system
+generic enough to execute any kind of tests people want.
 .sp
 The configuration is very minimal with Tunir.
 .SH INSTALLATION
@@ -76,15 +76,17 @@ libguestfs
 .IP \(bu 2
 libguestfs\-tools
 .IP \(bu 2
+ansible
+.IP \(bu 2
 paramiko
-.IP \(bu 2
-redis
-.IP \(bu 2
-python\-redis
 .IP \(bu 2
 vagrant\-libvirt
 .IP \(bu 2
+net\-tools
+.IP \(bu 2
 docker  (optional)
+.IP \(bu 2
+Ansible (optional)
 .UNINDENT
 .sp
 You can install them in Fedora by the following command:
@@ -93,19 +95,7 @@ You can install them in Fedora by the following command:
 .sp
 .nf
 .ft C
-$ sudo dnf install libguestfs\-tools python\-paramiko python\-sqlalchemy docker\-io python\-redis redis vagrant\-libvirt
-.ft P
-.fi
-.UNINDENT
-.UNINDENT
-.sp
-Start the redis server with the following command.:
-.INDENT 0.0
-.INDENT 3.5
-.sp
-.nf
-.ft C
-$ sudo service redis start
+$ sudo dnf install libguestfs\-tools python\-paramiko docker\-io vagrant\-libvirt ansible net\-tools
 .ft P
 .fi
 .UNINDENT
@@ -118,37 +108,85 @@ new cloud VM, or bare metal, or in Vagrant boxes based on the job configurations
 The current version can be used along with cron to run at predefined times. Tunir prints
 the output in the terminal, it also saves each command it ran, and the output in a text
 file located at \(aq/var/run/tunir/tunir_results.txt\(aq.
-.SS Enabling a queue of ports for the VMs
+.SS Configuring a new job
 .sp
-We maintain a queue of available ports in the local system, which will be used to create
-VM(s). We maintain this queue in Redis. We have a helper script which can enable some
-default ports to be used. They are defined in the \fIcreateports.py\fP\&. In case you are using
-a rpm, please check \fI/usr/share/tunir/\fP directory for the same.:
+There are two different kinds of job configuration files, the newer one is Multi\-VM config
+which can take any qcow2 image and use them to boot up one or more VMs. The other option
+is to use a JSON file based configuration which can be used for vm(s), vagrant images, or
+bare metal remote system based testing.
+.sp
+For a Multi\-VM configuration for a job called \fBdefault\fP create \fBdefault.cfg\fP file as
+explained below. We will also require another \fBdefault.txt\fP file which will contain the
+steps for testing.
+.SS jobname.cfg
+.sp
+New in version 0.14.
+
+.sp
+The following example contains a job where we are creating two VMs from the given image
+files. The images can be either standard cloud image, or Atomic image. We generate ssh
+keys for each run, and use that to login to the box.
 .INDENT 0.0
 .INDENT 3.5
 .sp
 .nf
 .ft C
-$ python createports.py
+[general]
+cpu = 1
+ram = 1024
+
+[vm1]
+user = fedora
+image = /home/Fedora\-Cloud\-Base\-20141203\-21.x86_64.qcow2
+
+[vm2]
+user = fedora
+image = /home/Fedora\-Cloud\-Base\-20141203\-21.x86_64.qcow2
 .ft P
 .fi
 .UNINDENT
 .UNINDENT
 .sp
-\fBNOTE:\fP
+The above configuration file is self\-explanatory.
+Each of the vm(s) created from the above configuration will get all the other vms\(aq IP
+details in the \fI/etc/hosts\fP along with vm name. Means \fIvm1\fP can ping \fIvm2\fP and vice
+versa. For each run, Tunir creates a new RSA key pair and pushes the public key to each
+vm, and uses the private key to do ssh based authentication.
+.SS Debugging test vm(s)
+.sp
+New in version 0.14.
+
+.sp
+This can also be used a quick way to get a few vm(s) up. While using Multi\-VM configuration,
+one can pass \fB\-\-debug\fP command line argument, and this will make sure that the vm(s) do not
+get destroyed at the end of the tests. It will create a \fIdestroy.sh\fP file, and print the path
+at the end of the run. All the vm(s) will be in running condition. You can ssh into them by
+using \fIprivate.key\fP file found in the same directory of the \fIdestroy.sh\fP\&.
+.sp
+When your debugging is done, you can execute the shell script to clean up all the running instances
+and any temporary file created by the previous run.
 .INDENT 0.0
 .INDENT 3.5
-This is very important. Please have the queue with usable ports ready before any
-other step. We use ports 2222 to 2230 as the default ports available in createports.py.
-.UNINDENT
-.UNINDENT
-.SS Configuring a new job
 .sp
-For each different job, two files are required. For example, \fIdefault\fP job has two files,
-\fBdefault.json\fP and \fBdefault.txt\fP\&.
+.nf
+.ft C
+# sh /tmp/tmpXYZ/destroy.sh
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+\fBWARNING:\fP
+.INDENT 0.0
+.INDENT 3.5
+The private key remains on the disk while running Tunir in the debug mode. Please remember
+to execute the destroy.sh script to clean up afterwards.
+.UNINDENT
+.UNINDENT
 .SS jobname.json
 .sp
-This file is the main configuration for the job. Below is the example of one such job.
+This file is the main configuration for the job when we just need only one vm, or using
+Vagrant, or testing on a remote vm/bare metal box. Below is the example of one such job.
 .INDENT 0.0
 .INDENT 3.5
 .sp
@@ -157,10 +195,9 @@ This file is the main configuration for the job. Below is the example of one suc
 {
   "name": "jobname",
   "type": "vm",
-  "image": "file:///home/vms/Fedora\-Cloud\-Base\-20141203\-21.x86_64.qcow2",
+  "image": "/home/vms/Fedora\-Cloud\-Base\-20141203\-21.x86_64.qcow2",
   "ram": 2048,
   "user": "fedora",
-  "password": "passw0rd"
 }
 .ft P
 .fi
@@ -177,16 +214,16 @@ The name of the job, which must match the filename.
 The type of system in which the tests will run. Possible values are vm, docker, bare.
 .TP
 .B image
-Path to the cloud image in case of a VM. You can provide docker image there for Docker based tests, or the ip/hostname of the bare metal box.
+Path to the cloud image in case of a VM. You can provide docker image there for Docker\-based tests, or the IP/hostname of the bare metal box.
 .TP
 .B ram
-The amount of RAM for the VM. Optional for bare or docker types.
+The amount of RAM for the VM. Optional for bare or Docker types.
 .TP
 .B user
 The username to connect to.
 .TP
 .B password
-The password of the given user. Right now for cloud VM(s) it is set to \fIpassw0rd\fP\&.
+The password of the given user. Right now for cloud VM(s) connect using ssh key.
 .TP
 .B key
 The path to the ssh key, the password value should be an empty string for this.
@@ -199,8 +236,8 @@ The port number as string to connect. (Required for bare type system.)
 This text file contains the bash commands to run in the system, one command per line. In case you are
 rebooting the system, you may want to use \fBSLEEP NUMBER_OF_SECONDS\fP command there.
 .sp
-If a command starts with @@ sign, it means the command is supposed to fail. Generally we check the return codes
-of the commands to find if it failed, or not. For Docker container based systems, we track the stderr output.
+If a command starts with @@ sign, it means the command is supposed to fail. Generally, we check the return codes
+of the commands to find if it failed, or not. For Docker container\-based systems, we track the stderr output.
 .sp
 We can also have non\-gating tests, means these tests can pass or fail, but the whole job status will depend
 on other gating tests. Any command in jobname.txt starting with ## sign will mark the test as non\-gating.
@@ -211,7 +248,7 @@ Example:
 .sp
 .nf
 .ft C
-## curl \-O https://kushal.fedorapeople.org/tunirtests.tar.gziii
+## curl \-O https://kushal.fedorapeople.org/tunirtests.tar.gz
 ls /
 ## foobar
 ## ls /root
@@ -220,6 +257,128 @@ date
 @@ sudo reboot
 SLEEP 40
 ls /etc
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS For Multi\-VM configurations
+.sp
+New in version 0.14.
+
+.sp
+In case where we are dealing with multiple VMs using .cfg file in our configuration,
+we prefix each line with the vm name (like vm1, vm2, vm3). This marks which command
+to run on which vm. The tool first checks the available vm names to these marks in the
+\fIjobname.txt\fP file, and it will complain about any extra vm marked in there. If one
+does not provide vm name, then it is assumed that the command will execute only on
+vm1 (which is the available vm).
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+vm1 sudo su \-c"echo Hello > /abcd.txt"
+vm2 ls /
+vm1 ls /
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+In the above example the line 1, and 3 will be executed on the vm1, and line 2 will be
+executed on vm2.
+.SS Using Ansible
+.sp
+New in version 0.14.
+
+.sp
+Along with Multi\-VM configuration, we got a new feature of using
+\fI\%Ansible\fP to configure the vm(s) we create. To do so,
+first, create the required roles, and playbook in a given path. You can write down
+the group of hosts with either naming like \fIvm1\fP, \fIvm2\fP, \fIvm3\fP or give them
+proper names like \fIkube\-master.example.com\fP\&. For the second case, we also have to
+pass these hostnames in each vm definition in the configuration file. We also
+provide the path to the directory containing all ansible details with \fIansible_dir\fP
+value.
+.sp
+Example configuration
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+[general]
+cpu = 1
+ram = 1024
+ansible_dir = /home/user/contrib/ansible
+
+[vm1]
+user = fedora
+image = /home/user/Fedora\-Cloud\-Atomic\-23\-20160308.x86_64.qcow2
+hostname = kube\-master.example.com
+
+[vm2]
+user = fedora
+image = /home/user/Fedora\-Cloud\-Atomic\-23\-20160308.x86_64.qcow2
+hostname = kube\-node\-01.example.com
+
+[vm3]
+user = fedora
+image = /home/user/Fedora\-Cloud\-Atomic\-23\-20160308.x86_64.qcow2
+hostname = kube\-node\-02.example.com
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+In the above example, we are creating 3 vm(s) with given hostnames.
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+If the number of CPU is not mentioned in the general section, Tunir will get 1 virtual CPU for the vm.
+.UNINDENT
+.UNINDENT
+.SS How to execute the playbook(s)?
+.sp
+In the \fIjobname.txt\fP you should have a \fBPLAYBOOK\fP command as given below
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+PLAYBOOK atom.yml
+vm1 sudo atomic run projectatomic/guestbookgo\-atomicapp
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+In this example, we are running a playbook called \fIatom.yml\fP, and then in the vm1 we
+are using atomicapp to start a nulecule app :)
+.SS Execute tests on multiple pre\-defined VM(s) or remote machines
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+[general]
+cpu = 1
+ram = 1024
+ansible_dir = /home/user/contrib/ansible
+pkey = /home/user/.ssh/id_rsa
+
+[vm1]
+user = fedora
+ip = 192.168.122.100
+
+[vm2]
+user = fedora
+ip = 192.168.122.101
+
+[vm3]
+user = fedora
+ip = 192.168.122.102
 .ft P
 .fi
 .UNINDENT
@@ -269,47 +428,9 @@ $ sudo ./tunir \-\-job jobname \-\-config\-dir /etc/tunirjobs/
 .fi
 .UNINDENT
 .UNINDENT
-.SS Persistence for downloaded images
-.sp
-To make images that are downloaded persist across runs of tunir and get reused then you can specify the image directory to save them in.:
-.INDENT 0.0
-.INDENT 3.5
-.sp
-.nf
-.ft C
-$ sudo ./tunir \-\-job jobname \-\-image\-dir /var/lib/tunirimages/
-.ft P
-.fi
-.UNINDENT
-.UNINDENT
-.SS Stateless jobs
-.sp
-\fBNOTE:\fP
-.INDENT 0.0
-.INDENT 3.5
-Now all jobs are by default stateless.
-.UNINDENT
-.UNINDENT
-.sp
-You can run a job as stateless, which does not require any database. This will print the result at the end of the
-run.:
-.INDENT 0.0
-.INDENT 3.5
-.sp
-.nf
-.ft C
-$ sudo ./tunir \-\-job jobname \-\-stateless
-.ft P
-.fi
-.UNINDENT
-.UNINDENT
-.SS Atomic images
-.sp
-In case you are using an Atomic image in vm, you can pass the command line argument \fI\-\-atomic\fP, that way Tunir will be
-able to boot the image properly in the local system.
 .SS Timeout issue
 .sp
-In case if one of the command fails to return within 10 minutes (600 seconds),
+In case if one of the commands fails to return within 10 minutes (600 seconds),
 tunir will fail the job with a timeout error. It will be marked at the end of
 the results. You can change the default value in the config file with a timeout
 key. In the below example I am having 300 seconds as timeout for each command.:
@@ -523,6 +644,6 @@ Another example with paravirtual type of instance.
 .SH AUTHOR
 Kushal Das
 .SH COPYRIGHT
-2015, Kushal Das
+2015-2016, Kushal Das
 .\" Generated by docutils manpage writer.
 .

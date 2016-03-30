@@ -102,12 +102,14 @@ def random_mac():
         random.randint(0x00, 0xff) ]
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
-def boot_qcow2(image, seed, ram=1024, vcpu=1):
+def boot_qcow2(image, seed, ram=1024, vcpu='1'):
     "Boots the image with a seed image"
     mac = random_mac()
     boot_args = ['/usr/bin/qemu-kvm',
                  '-m',
                  str(ram),
+                 '-smp',
+                 vcpu,
                  '-drive',
                  'file=%s,if=virtio' % image,
                  '-drive',
@@ -146,6 +148,9 @@ public-keys:
 
 def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.'):
     "Start the executation here."
+    temppath = tempfile.mktemp()
+    extra_config = {'result_path' : temppath}
+    print('Result file at: {0}'.format(temppath))
     status = 0
     ansible_inventory_path = None
     fault_in_ip_addr = False
@@ -154,12 +159,17 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
     if debug:
         print(config_path)
     config = None
+    vcpu = '1'
     vms = {} # Empty directory to store vm details
     dirs_to_delete = [] # We will delete those at the end
     vm_keys = None
     if not oldconfig:
         config = read_multihost_config(config_path)
-        ram = config.get('general').get('ram')
+        ram = config.get('general').get('ram', '1024')
+        vcpu = config.get('general').get('cpu', '1')
+        result_path = config.get('general').get('result_path', None)
+        if result_path:
+            extra_config['result_path'] = result_path
         vm_keys = [name for name in config.keys() if name.startswith('vm')]
         if 'key' in config['general']:
             data = ''
@@ -229,7 +239,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
                 os.system('cp {0} {1}'.format(image_path, current_d))
                 image = os.path.join(current_d, os.path.basename(image_path))
 
-                vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu='1')
+                vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu=vcpu)
                 this_vm.update({'process': vm, 'mac': mac})
                 # Let us get this vm in the tobe delete list even if the IP never comes up
                 vms[vm_c] = this_vm
@@ -279,7 +289,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
 
         # This is where we test
 
-        status = run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir)
+        status = run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir, extra_config=extra_config)
     except Exception as e:
         import traceback
         exc_type, exc_value, exc_traceback = sys.exc_info()

@@ -169,7 +169,7 @@ first, create the required roles, and playbook in a given path. You can write do
 the group of hosts with either naming like *vm1*, *vm2*, *vm3* or give them
 proper names like *kube-master.example.com*. For the second case, we also have to
 pass these hostnames in each vm definition in the configuration file. We also
-provide the path to the directory containing all ansible details with *ansible_dir*
+provide the path to the directory containing all ansible details with *ansible_dir* 
 value.
 
 Example configuration

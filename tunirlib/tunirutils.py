@@ -205,14 +205,14 @@ def update_result(result, command, negative):
     return True
 
 
-def run_job(jobpath, job_name='', config={}, container=None,
+def run_job(jobpath, job_name='', extra_config={}, container=None,
             port=None, vms=[], ansible_path='' ):
     """
     Runs the given command using paramiko.
 
     :param jobpath: Path to the job file.
     :param job_name: string job name.
-    :param config: Configuration of the given job
+    :param extra_config: Configuration of the given job
     :param container: Docker object for a Docker job.
     :param port: The port number to connect in case of a vm.
     :param vms: For multihost configuration
@@ -232,7 +232,7 @@ def run_job(jobpath, job_name='', config={}, container=None,
     timeout_issue = False
     ssh_issue = False
 
-    result_path = config.get('result_path', '/var/run/tunir/tunir_result.txt')
+    result_path = extra_config['result_path']
     ansible_inventory_path = None
     private_key_path = None
     private_key_path = None
@@ -249,13 +249,6 @@ def run_job(jobpath, job_name='', config={}, container=None,
 
     try:
         job = None
-        if not vms: # Do this for anything other than multihost
-            if not 'host_string' in config: # For VM based tests.
-                config['host_string'] = '127.0.0.1'
-            if config['type'] == 'vm':
-                config['port'] = port
-            elif config['type'] == 'bare':
-                config['host_string'] = config['image']
 
         for command in commands:
             negative = False

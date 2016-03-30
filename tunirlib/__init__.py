@@ -42,7 +42,7 @@ def main(args):
     # For multihost
     if args.multi:
         jobpath = os.path.join(args.config_dir, args.multi + '.txt')
-        status = start_multihost(args.multi, jobpath, debug)
+        status = start_multihost(args.multi, jobpath, debug, args.config_dir)
         os.system('stty sane')
         if status:
             sys.exit(0)

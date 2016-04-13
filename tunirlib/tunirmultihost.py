@@ -272,7 +272,6 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
 
             vms[vm_c] = this_vm
         only_vms = vms.copy()
-        del only_vms['general']
         vms['general'] = config['general']
         if fault_in_ip_addr:
             print('Oops no IP for this vm.')

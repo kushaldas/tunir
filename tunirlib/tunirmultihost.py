@@ -271,7 +271,8 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
                 this_vm['hostname'] = config[vm_c].get('hostname')
 
             vms[vm_c] = this_vm
-
+        only_vms = vms.copy()
+        del only_vms['general']
         vms['general'] = config['general']
         if fault_in_ip_addr:
             print('Oops no IP for this vm.')
@@ -281,8 +282,6 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
         if debug:
             pprint(vms)
         print(' ')
-        only_vms = vms.copy()
-        del only_vms['general']
         inject_ip_to_vms(only_vms, private_key)
         ansible_flag = config.get('general').get('ansible_dir', None)
         if ansible_flag:

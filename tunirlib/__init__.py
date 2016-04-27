@@ -62,8 +62,10 @@ def main(args):
     os.system('mkdir -p /var/run/tunir')
     if config['type'] == 'vm':
         status = start_multihost(job_name, jobpath, debug, config, args.config_dir)
+        if status:
+            return_code = 0
         os.system('stty sane')
-        sys.exit(status)
+        sys.exit(return_code)
 
     if config['type'] == 'vagrant':
         node, config = vagrant_and_run(config)

@@ -93,6 +93,8 @@ class Vagrant(object):
         libvirt_config = '''Vagrant.configure("2") do |config|
   config.vm.define :tunirserver do |tunirserver|
     tunirserver.vm.box = "{0}"
+    tunirserver.vm.synced_folder ".", "/home/vagrant/sync", disabled: true
+    tunirserver.vm.synced_folder ".", "/vagrant", disabled: true
     tunirserver.vm.provider :libvirt do |domain|
       domain.memory = {1}
       domain.cpus = 2

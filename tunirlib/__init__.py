@@ -79,14 +79,20 @@ def main(args):
         else:
             print "We have an instance ready in AWS.", node.node
 
+    elif config['type'] == 'bare':
+        config['host_string'] = config['image']
+        config['ip'] = config['image']
+        config['port'] = config.get('port', '22')
+        run_job_flag = True
     try:
         if run_job_flag:
             status = start_multihost(job_name, jobpath, debug, config, args.config_dir)
             if status:
                 return_code = 0
     finally:
-        # Destroy and remove the Vagrant box or AWS instance
-        node.destroy()
+        if config['type'] != 'bare':
+            # Destroy and remove the Vagrant box or AWS instance
+            node.destroy()
 
         sys.exit(return_code)
 

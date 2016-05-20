@@ -30,7 +30,7 @@ def true_test(vms, private_key, command='cat /proc/cpuinfo'):
     for vm in vms.values():
         for i in range(5):
             try:
-                res = run(vm['ip'],22,user=vm['user'], command=command,pkey=key, debug=False)
+                res = run(vm['ip'], port=vm['port'], user=vm['user'], command=command,pkey=key, debug=False)
                 break
             except Exception as e:
                 print("Try {0} failed for IP injection to /etc/hosts.".format(i))
@@ -65,7 +65,7 @@ def create_rsa_key(private_key):
     :return: The RSAKey object to be used in paramiko
     """
     fobj = cStringIO.StringIO(private_key)
-    key = RSAKey(file_obj=fobj)
+    key = RSAKey.from_private_key(file_obj=fobj)
     return key
 
 def generate_sshkey(bits=2048):
@@ -261,9 +261,11 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
                 this_vm['ip'] = latest_ip
                 this_vm['host_string'] = latest_ip
                 this_vm['pkey'] = pkey
+                this_vm['port'] = config[vm_c].get('port', 22)
             else:
                 this_vm['ip'] = config[vm_c].get('ip')
                 this_vm['host_string'] = config[vm_c].get('ip')
+                this_vm['port'] = config[vm_c].get('port', 22)
                 this_vm['pkey'] = config['general']['pkey']
 
             this_vm['user'] = config[vm_c].get('user')

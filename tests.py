@@ -122,7 +122,7 @@ class TunirTests(unittest.TestCase):
 
             #self.assertIn("Passed:1", out.getvalue())
             #self.assertIn("Job status: True", out.getvalue())
-        for calls,vals in zip(p_run.mock_calls,(('192.168.122.100', '22', 'fedora', None, 'sudo su -c"echo Hello > /abcd.txt"'),('192.168.122.102', '22', 'fedora', None, 'ls /'),('192.168.122.100', '22', 'fedora', None, 'cat /etc/os-release'))):
+        for calls,vals in zip(p_run.mock_calls,(('192.168.122.100', 22, 'fedora', None, 'sudo su -c"echo Hello > /abcd.txt"'),('192.168.122.102', 22, 'fedora', None, 'ls /'),('192.168.122.100', 22, 'fedora', None, 'cat /etc/os-release'))):
             self.assertEqual(calls[1],vals)
 
 

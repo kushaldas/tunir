@@ -18,7 +18,7 @@
 import time
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
-
+from typing import List, Dict, Set, Tuple, Union, Callable, TypeVar, Any, cast
 
 class EC2Node(object):
     def __init__(self, ACCESS_ID, SECRET_KEY, IMAGE_ID, SIZE_ID, region="us-west-1",
@@ -30,14 +30,14 @@ class EC2Node(object):
         self.driver = cls(ACCESS_ID, SECRET_KEY, region=region)
         sizes = self.driver.list_sizes()
         images = self.driver.list_images()
-        self.size = None
-        self.image = None
+        self.size = None # type: Any
+        self.image = None # type: Any
         self.aki = aki
         self.state = 'pending'
         self.virt_type = virt_type
         self.failed = False
-        self.node = None
-        self.ip = None
+        self.node = None # type: Any
+        self.ip = None # type: str
         print "AWS job type:", virt_type
         print "AMI {0}, AKI {1} SIZE {2} REGION {3}".format(IMAGE_ID, aki, SIZE_ID, region)
         try:

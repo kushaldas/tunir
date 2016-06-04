@@ -13,6 +13,7 @@ import config
 
 
 def create_user_data(path, password):
+    # type: (str, str) -> str
     "Creates a simple user data file"
     file_data = config.USER_DATA % password
     with open(path + '/meta/user-data', 'w') as user_file:
@@ -21,6 +22,7 @@ def create_user_data(path, password):
 
 
 def create_seed_img(meta_path, img_path):
+    # type: (str, str) -> str
     """Create a virtual filesystem needed for boot with virt-make-fs on a given
     path (it should probably be somewhere in '/tmp'."""
 

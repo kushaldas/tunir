@@ -90,7 +90,7 @@ def create_ansible_inventory(vms, filepath):
 def run(host='127.0.0.1', port=22, user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',
                   timeout=120, pkey=None, debug=False):
-    # type(str, int, str, str, str, int, str, int, Any, bool) -> Any
+    # type(str, int, str, str, str, int, str, int, Any, bool) -> T_Result
     """
     Excecutes a command using paramiko and returns the result.
     :param host: Host to connect
@@ -171,6 +171,7 @@ def try_again(func):
 
 @try_again
 def execute(config, command, container=None):
+    # type: (Dict[str, Any], str, bool) -> Tuple[str, str]
     """
     Executes a given command based on the system.
     :param config: Configuration dictionary.
@@ -199,6 +200,7 @@ def execute(config, command, container=None):
     return result, negative
 
 def update_result(result, command, negative):
+    # type: (Result, str, str) -> bool
     """
     Updates the result based on input.
 
@@ -217,8 +219,8 @@ def update_result(result, command, negative):
         if result.return_code != 0:
             status = False
 
-    d = {'command': command, 'result': unicode(result),
-         'ret': result.return_code, 'status': status}
+    d = {'command': command, 'result': str(result),
+         'ret': str(result.return_code), 'status': status} # type: Dict[str, str]
     STR[command] = d
 
 
@@ -273,8 +275,8 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
 
     try:
         for command in commands:
-            negative = False
-            result = ''
+            negative = ''
+            result = Result('none')
             command = command.strip(' \n')
             if command.startswith('SLEEP'): # We will have to sleep
                 word = command.split(' ')[1]

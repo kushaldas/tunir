@@ -171,7 +171,7 @@ def try_again(func):
 
 @try_again
 def execute(config, command, container=None):
-    # type: (Dict[str, Any], str, bool) -> Tuple[str, str]
+    # type: (Dict[str, Any], str, bool) -> Tuple[T_Result, str]
     """
     Executes a given command based on the system.
     :param config: Configuration dictionary.
@@ -220,7 +220,7 @@ def update_result(result, command, negative):
             status = False
 
     d = {'command': command, 'result': str(result),
-         'ret': str(result.return_code), 'status': status} # type: Dict[str, str]
+         'ret': str(result.return_code), 'status': status} # type: Dict[str, Any]
     STR[command] = d
 
 
@@ -276,7 +276,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
     try:
         for command in commands:
             negative = ''
-            result = Result('none')
+            result = Result('none') # type: Result
             command = command.strip(' \n')
             if command.startswith('SLEEP'): # We will have to sleep
                 word = command.split(' ')[1]

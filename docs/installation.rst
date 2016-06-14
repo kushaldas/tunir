@@ -24,12 +24,15 @@ We are currently depended on the following projects or libraries.
 - vagrant-libvirt
 - pycrypto
 - net-tools
+- typing
+- python-systemd (python2-systemd package in Fedora)
 - Ansible (optional)
 
 
 
 You can install them in Fedora by the following command::
 
-    $ sudo dnf install libguestfs-tools python-paramiko docker-io vagrant-libvirt ansible net-tools python-crypto
+    $ sudo dnf install libguestfs-tools python-paramiko docker-io vagrant-libvirt ansible net-tools python-crypto python2-typing python2-systemd
 
 
+.. note:: Remember to install python2-systemd package using dnf only

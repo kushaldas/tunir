@@ -3,3 +3,9 @@
 .idea
 *.qcow2
 aws*
+.coverage
+coverage.xml
+htmlcov
+docs/_build
+tunir.egg-info
+dist

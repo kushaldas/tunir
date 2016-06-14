@@ -6,9 +6,11 @@ import shutil
 import paramiko
 import socket
 import codecs
+import logging
 import subprocess
 from collections import OrderedDict
 from typing import List, Dict, Set, Tuple, Union, Callable, TypeVar, Any, cast
+log = logging.getLogger('tunir')
 
 T_Callable = TypeVar('T_Callable', bound=Callable[...,Any])
 T_Result = TypeVar('T_Result')
@@ -57,8 +59,11 @@ def match_vm_numbers(vm_keys, jobpath):
     job_vms_keys = job_vms.keys()
     diff = list(set(job_vms_keys) - set(vm_keys))
     if diff:
-        print("We have extra vm(s) in job file which are not defined in configuratoin.")
+        msg = "We have extra vm(s) in job file which are not defined in configuratoin."
+        log.error(msg)
+        print(msg)
         print(diff)
+        log.error(diff)
         return False
     return True
 
@@ -278,6 +283,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
             negative = ''
             result = Result('none') # type: Result
             command = command.strip(' \n')
+            log.info("Next command: {0}".format(command))
             if command.startswith('SLEEP'): # We will have to sleep
                 word = command.split(' ')[1]
                 print "Sleeping for %s." % word
@@ -313,14 +319,17 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
             except socket.timeout: # We have a timeout in the command
                 status = False
                 timeout_issue = True
+                log.error("We have a socket timeout.")
                 break
             except paramiko.ssh_exception.SSHException:
                 status = False
                 ssh_issue = True
+                log.error("Getting SSHException.")
                 break
             except Exception as err: #execute failed for some reason, we don't know why
                 status = False
                 print err
+                log.error(err)
                 break
 
         # If we are here, that means all commands ran successfully.

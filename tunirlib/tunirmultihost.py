@@ -9,11 +9,13 @@ from paramiko.rsakey import RSAKey
 import subprocess
 import tempfile
 import ConfigParser
+import logging
 from pprint import pprint
 from .tunirutils import run, clean_tmp_dirs, system, run_job
 from .tunirutils import match_vm_numbers, create_ansible_inventory
 from .tunirutils import IPException
 from .testvm import  create_user_data, create_seed_img
+log = logging.getLogger('tunir')
 
 def true_test(vms, private_key, command='cat /proc/cpuinfo'):
     """
@@ -247,6 +249,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
                 image_path = config[vm_c].get('image')
                 os.system('cp {0} {1}'.format(image_path, current_d))
                 image = os.path.join(current_d, os.path.basename(image_path))
+                log.info("Booting {0}".format(image))
 
                 vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu=vcpu)
                 this_vm.update({'process': vm, 'mac': mac})
@@ -271,6 +274,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             this_vm['user'] = config[vm_c].get('user')
             if 'hostname' in config[vm_c]:
                 this_vm['hostname'] = config[vm_c].get('hostname')
+            log.info("IP of the new instance: {0}".format(this_vm.get('ip')))
 
             vms[vm_c] = this_vm
         only_vms = vms.copy()

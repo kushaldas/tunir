@@ -17,9 +17,11 @@
 
 import os
 import time
+import logging
 import subprocess
 from typing import List, Dict, Set, Tuple, Union, Callable, TypeVar, Any, cast
 
+log = logging.getLogger('tunir')
 
 def system(cmd):
     """
@@ -133,6 +135,7 @@ end'''
 
         print "Adding vagrant box."
         cmd = 'vagrant box add {0} --name {1}'.format(image_url, name)
+        log.info(cmd)
         out, err, retcode = system(cmd)
         # Now check for error, I will skip this.
         if retcode != 0:
@@ -146,6 +149,7 @@ end'''
 
         # Let us up the vagrant
         cmd = 'vagrant up --provider {0}'.format(self.provider)
+        log.info(cmd)
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to do vagrant up the box.")
@@ -160,6 +164,7 @@ end'''
 
         # Now let us try to get the ssh-config
         cmd = 'vagrant ssh-config'
+        log.info(cmd)
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to get ssh config for the box.")
@@ -174,12 +179,14 @@ end'''
         os.chdir(self.path)
         print "Let us destroy the box."
         cmd = 'vagrant destroy -f'
+        log.info(cmd)
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to destroy the instance.")
             print err
 
         cmd = 'vagrant box remove {0} -f'.format(self.name)
+        log.info(cmd)
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to remove the box.")

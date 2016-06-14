@@ -7,6 +7,13 @@ from tuniraws import aws_and_run
 from tunirmultihost import start_multihost
 from tunirutils import run_job, Result
 from collections import OrderedDict
+import logging
+from systemd.journal import JournalHandler
+
+log = logging.getLogger('tunir')
+log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='tunir'))
+log.setLevel(logging.DEBUG)
+
 
 STR = OrderedDict() # type: Dict[str, Dict[str, str]]
 
@@ -20,6 +27,7 @@ def read_job_configuration(jobname='', config_dir='./'):
     data = None
     name = jobname + '.json'
     name = os.path.join(config_dir, name)
+    log.info("Reading configuration {0}".format(name))
     if not os.path.exists(name):
         print "Job configuration is missing."
         return None

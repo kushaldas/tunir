@@ -139,7 +139,7 @@ class ExecuteTests(unittest.TestCase):
         r1.return_code = 0
         t_run.return_value=r1
         res, negative = tunirutils.execute(config, 'ls')
-        self.assertEqual(res, "result1")
+        self.assertEqual(str(res), "result1")
         self.assertEqual(negative, "no")
 
     @patch('tunirlib.tunirutils.run')
@@ -150,7 +150,7 @@ class ExecuteTests(unittest.TestCase):
         r1.return_code = 127
         t_run.return_value=r1
         res, negative = tunirutils.execute(config, '@@ ls')
-        self.assertEqual(res, "result1")
+        self.assertEqual(str(res), "result1")
         self.assertEqual(negative, "yes")
 
     @patch('tunirlib.tunirutils.run')
@@ -161,7 +161,7 @@ class ExecuteTests(unittest.TestCase):
         r1.return_code = 127
         t_run.return_value=r1
         res, negative = tunirutils.execute(config, '## ls')
-        self.assertEqual(res, "result1")
+        self.assertEqual(str(res), "result1")
         self.assertEqual(negative, "dontcare")
 
 class UpdateResultTest(unittest.TestCase):

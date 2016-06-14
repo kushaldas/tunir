@@ -18,6 +18,7 @@
 import os
 import time
 import subprocess
+from typing import List, Dict, Set, Tuple, Union, Callable, TypeVar, Any, cast
 
 
 def system(cmd):
@@ -62,6 +63,7 @@ def refresh_storage_pool():
 
 
 def parse_ssh_config(text):
+    # type: (str) -> Dict[str, str]
     """
     Parses the SSH config and returns a dict
     """
@@ -86,7 +88,7 @@ class Vagrant(object):
         self.name = name
         self.image_url = image_url
         self.path = path
-        self.keys = None
+        self.keys = None # type: Dict[str, str]
         self.failed = False
         self.provider = provider
 
@@ -112,7 +114,7 @@ end'''
   end
 end'''
 
-        self.vagrantfile = None
+        self.vagrantfile = None # type: str
         if self.provider == 'libvirt':
             self.vagrantfile = libvirt_config
             refresh_storage_pool()

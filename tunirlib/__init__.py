@@ -8,7 +8,7 @@ from tunirmultihost import start_multihost
 from tunirutils import run_job, Result
 from collections import OrderedDict
 
-STR = OrderedDict()
+STR = OrderedDict() # type: Dict[str, Dict[str, str]]
 
 
 def read_job_configuration(jobname='', config_dir='./'):

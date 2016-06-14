@@ -8,16 +8,36 @@ import socket
 import codecs
 import subprocess
 from collections import OrderedDict
+from typing import List, Dict, Set, Tuple, Union, Callable, TypeVar, Any, cast
 
-STR = OrderedDict()
+T_Callable = TypeVar('T_Callable', bound=Callable[...,Any])
+T_Result = TypeVar('T_Result')
 
-class Result(str):
+STR = OrderedDict() # type: Dict[str, Dict[str, str]]
+
+class Result(object):
+    # type: (text) -> T_Result
     """
-    To hold results from sshcommand executions.
+        To hold results from sshcommand executions.
     """
+    def __init__(self, text):
+        # type: (str) -> None
+        self.text = text # type: str
+        self.return_code = None # type: int
+
     @property
     def stdout(self):
-        return str(self)
+        # type: () -> str
+        return str(self.text)
+
+    def __str__(self):
+        return self.text
+
+    def __repr__(self):
+        return self.text
+
+    def __unicode__(self):
+        return unicode(self.text, encoding='utf-8', errors='replace')
 
 def match_vm_numbers(vm_keys, jobpath):
     """Matches vm definations mentioned in config, and in the job file.
@@ -25,17 +45,17 @@ def match_vm_numbers(vm_keys, jobpath):
     :param vm_keys: vm(s) from the configuration
     :param jobpath: Path to the job file.
     """
-    commands = []
+    commands = [] # type: List[str]
     with open(jobpath) as fobj:
         commands = fobj.readlines()
-    job_vms = {}
+    job_vms = {} # type: Dict[str, bool]
     for command in commands:
         if re.search('^vm[0-9] ', command):
             index = command.find(' ')
             vm_name = command[:index]
             job_vms[vm_name] = True
-    job_vms = job_vms.keys()
-    diff = list(set(job_vms) - set(vm_keys))
+    job_vms_keys = job_vms.keys()
+    diff = list(set(job_vms_keys) - set(vm_keys))
     if diff:
         print("We have extra vm(s) in job file which are not defined in configuratoin.")
         print(diff)
@@ -70,6 +90,7 @@ def create_ansible_inventory(vms, filepath):
 def run(host='127.0.0.1', port=22, user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',
                   timeout=120, pkey=None, debug=False):
+    # type(str, int, str, str, str, int, str, int, Any, bool) -> T_Result
     """
     Excecutes a command using paramiko and returns the result.
     :param host: Host to connect
@@ -114,12 +135,14 @@ def run(host='127.0.0.1', port=22, user='root',
     return out
 
 def clean_tmp_dirs(dirs):
+    # type: (List[str]) -> None
     "Removes the temporary directories"
     for path in dirs:
         if os.path.exists(path) and path.startswith('/tmp'):
             shutil.rmtree(path)
 
 def system(cmd):
+    # type: (str) -> Tuple[str, str, int]
     """
     Runs a shell command, and returns the output, err, returncode
 
@@ -133,6 +156,7 @@ def system(cmd):
     return out, err, returncode
 
 def try_again(func):
+    # type: (T_Callable) -> T_Callable
     "We will try again for ssh errors."
     def wrapper(*args, **kargs):
         try:
@@ -143,17 +167,18 @@ def try_again(func):
             print "Now trying for second time."
             result = func(*args, **kargs)
         return result
-    return wrapper
+    return cast(T_Callable, wrapper)
 
 @try_again
 def execute(config, command, container=None):
+    # type: (Dict[str, Any], str, bool) -> Tuple[T_Result, str]
     """
     Executes a given command based on the system.
     :param config: Configuration dictionary.
     :param command: The command to execute
     :return: (Output text, string)
     """
-    result = ''
+    result = None
     negative = 'no'
     if command.startswith('@@'):
         command = command[3:].strip()
@@ -175,6 +200,7 @@ def execute(config, command, container=None):
     return result, negative
 
 def update_result(result, command, negative):
+    # type: (Result, str, str) -> bool
     """
     Updates the result based on input.
 
@@ -193,8 +219,8 @@ def update_result(result, command, negative):
         if result.return_code != 0:
             status = False
 
-    d = {'command': command, 'result': unicode(result, encoding='utf-8', errors='replace'),
-         'ret': result.return_code, 'status': status}
+    d = {'command': command, 'result': str(result),
+         'ret': str(result.return_code), 'status': status} # type: Dict[str, Any]
     STR[command] = d
 
 
@@ -227,7 +253,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
     # Now read the commands inside the job file
     # and execute them one by one, we need to save
     # the result too.
-    commands = []
+    commands = [] # type: List[str]
     status = True
     timeout_issue = False
     ssh_issue = False
@@ -248,11 +274,9 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
 
 
     try:
-        job = None
-
         for command in commands:
-            negative = False
-            result = ''
+            negative = ''
+            result = Result('none') # type: Result
             command = command.strip(' \n')
             if command.startswith('SLEEP'): # We will have to sleep
                 word = command.split(' ')[1]

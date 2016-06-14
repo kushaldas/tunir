@@ -2,3 +2,5 @@ paramiko
 mock
 apache-libcloud
 pycrypto
+typing
+python-systemd

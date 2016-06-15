@@ -19,22 +19,11 @@ import os
 import time
 import logging
 import subprocess
+from .tunirutils import system
 from typing import List, Dict, Set, Tuple, Union, Callable, TypeVar, Any, cast
 
 log = logging.getLogger('tunir')
 
-def system(cmd):
-    """
-    Runs a shell command, and returns the output, err, returncode
-
-    :param cmd: The command to run.
-    :return:  Tuple with (output, err, returncode).
-    """
-    ret = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-    out, err = ret.communicate()
-    returncode = ret.returncode
-    return out, err, returncode
 
 def refresh_vol_pool():
     '''Refreshes libvirt volume by removing extra files..

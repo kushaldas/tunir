@@ -10,7 +10,7 @@ from mock import patch, Mock
 import tunirlib
 from tunirlib.tunirutils import Result, system
 from tunirlib import main
-from tunirlib import tunirutils, tunirmultihost
+from tunirlib import tunirutils, tunirmultihost, tunirvagrant
 
 @contextmanager
 def captured_output():
@@ -186,6 +186,20 @@ class UpdateResultTest(unittest.TestCase):
         res = [True, True, False]
         for out, result in zip(tunirlib.STR.iteritems(), res):
             self.assertEqual(out[1]['status'], result)
+
+
+class TestVagrant(unittest.TestCase):
+    "To test the vagrant class"
+
+    @patch('tunirlib.tunirvagrant.system')
+    def test_refresh_vol_pool(self, t_sys):
+        line = """ Name                 Path
+------------------------------------------------------------------------------
+ tunir-box.qcow2        /var/lib/libvirt/images/tunir-box.qcow2 """
+        t_sys.return_value = (line,"no error",0)
+        tunirvagrant.refresh_storage_pool()
+        self.assertTrue(t_sys.called)
+        t_sys.assert_called_with('virsh pool-list')
 
 
 if __name__ == '__main__':

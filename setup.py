@@ -13,8 +13,8 @@ setup(name = 'tunir',
     license = "GPLv2+",
     packages=find_packages(),
     data_files=[('share/tunir',
-                  ['default.json', 'multihost.txt','multihost.cfg',
-                    'default.txt', 'vgt.json', 'vgt.txt']),
+                  ['examples/default.json', 'examples/multihost.txt', 'examples/multihost.cfg',
+                    'examples/default.txt', 'examples/vgt.json', 'examples/vgt.txt']),
         ('share/man/man8/', ['tunir.8'])],
     entry_points = {
           'console_scripts': [

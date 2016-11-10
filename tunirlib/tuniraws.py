@@ -24,7 +24,7 @@ class EC2Node(object):
     def __init__(self, ACCESS_ID, SECRET_KEY, IMAGE_ID, SIZE_ID, region="us-west-1",
                  aki=None, keyname='tunir', security_group='ssh', virt_type='paravirtual'):
 
-        print "Starting an AWS EC2 based job."
+        print("Starting an AWS EC2 based job.")
         self.region = region
         cls = get_driver(Provider.EC2)
         self.driver = cls(ACCESS_ID, SECRET_KEY, region=region)
@@ -38,13 +38,13 @@ class EC2Node(object):
         self.failed = False
         self.node = None # type: Any
         self.ip = None # type: str
-        print "AWS job type:", virt_type
-        print "AMI {0}, AKI {1} SIZE {2} REGION {3}".format(IMAGE_ID, aki, SIZE_ID, region)
+        print("AWS job type:", virt_type)
+        print("AMI {0}, AKI {1} SIZE {2} REGION {3}".format(IMAGE_ID, aki, SIZE_ID, region))
         try:
             self.size = [s for s in sizes if s.id == SIZE_ID][0]
             self.image = [i for i in images if i.id == IMAGE_ID][0]
         except Exception as err:
-            print err
+            print(err)
             self.failed = True
             return
         try:
@@ -64,36 +64,36 @@ class EC2Node(object):
                 if n.public_ips:
                     self.ip = n.public_ips[0]
                     self.node = n
-                    print "Got the IP", self.ip
+                    print("Got the IP", self.ip)
                     break
             # Now we will wait change the state to running.
             # 0: running
             # 3: pending
             for i in range(5):
                 time.sleep(30)
-                print "Trying to find the state."
+                print("Trying to find the state.")
                 nodes = self.driver.list_nodes(ex_node_ids=[self.node.id, ])
                 n = nodes[0]
                 if n.state == 0:
                     self.node = n
                     self.state = 'running'
-                    print "The node is in running state."
+                    print("The node is in running state.")
                     time.sleep(30)
                     break
                 else:
-                    print "Nope, not yet."
+                    print("Nope, not yet.")
 
         except Exception as err:
-            print err
+            print(err)
         if not self.ip:
             self.failed = True
 
     def destroy(self):
-        print "Now trying to destroy the EC2 node."
+        print("Now trying to destroy the EC2 node.")
         if self.node.destroy():
-            print "Successfully destroyed."
+            print("Successfully destroyed.")
         else:
-            print "There was in issue in destorying the node."
+            print("There was in issue in destorying the node.")
 
 
 def aws_and_run(config):

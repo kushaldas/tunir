@@ -2,10 +2,10 @@ import os
 import sys
 import json
 import argparse
-from tunirvagrant import vagrant_and_run
-from tuniraws import aws_and_run
-from tunirmultihost import start_multihost
-from tunirutils import run_job, Result
+from .tunirvagrant import vagrant_and_run
+from .tuniraws import aws_and_run
+from .tunirmultihost import start_multihost
+from .tunirutils import run_job, Result
 from collections import OrderedDict
 import logging
 from systemd.journal import JournalHandler
@@ -29,7 +29,7 @@ def read_job_configuration(jobname='', config_dir='./'):
     name = os.path.join(config_dir, name)
     log.info("Reading configuration {0}".format(name))
     if not os.path.exists(name):
-        print "Job configuration is missing."
+        print("Job configuration is missing.")
         return None
     with open(name) as fobj:
         data = json.load(fobj)
@@ -85,7 +85,7 @@ def main(args):
         if node.failed:
             run_job_flag = False
         else:
-            print "We have an instance ready in AWS.", node.node
+            print("We have an instance ready in AWS.", node.node)
 
     elif config['type'] == 'bare':
         config['host_string'] = config['image']

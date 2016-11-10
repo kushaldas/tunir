@@ -76,7 +76,7 @@ def create_ansible_inventory(vms, filepath):
     """
     text = ''
     extra = ''
-    for k, v in vms.iteritems():
+    for k, v in vms.items():
         # ip hostname format for /etc/hosts
         hostname = v.get('hostname',k)
         line = "{0} ansible_ssh_host={1} ansible_ssh_user={2}\n".format(hostname,v['ip'],v['user'])
@@ -170,7 +170,7 @@ def system(cmd):
     :return:  Tuple with (output, err, returncode).
     """
     ret = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, universal_newlines=True)
     out, err = ret.communicate()
     returncode = ret.returncode
     return out, err, returncode
@@ -182,9 +182,9 @@ def try_again(func):
         try:
             result = func(*args, **kargs)
         except paramiko.ssh_exception.SSHException:
-            print "Getting ssh exception, sleeping for 30 seconds and then trying again."
+            print("Getting ssh exception, sleeping for 30 seconds and then trying again.")
             time.sleep(30)
-            print "Now trying for second time."
+            print("Now trying for second time.")
             result = func(*args, **kargs)
         return result
     return cast(T_Callable, wrapper)
@@ -267,7 +267,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
     :return: Status of the job in boolean
     """
     if not os.path.exists(jobpath):
-        print "Missing job file {0}".format(jobpath)
+        print("Missing job file {0}".format(jobpath))
         return False
 
     # Now read the commands inside the job file
@@ -301,7 +301,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
             log.info("Next command: {0}".format(command))
             if command.startswith('SLEEP'): # We will have to sleep
                 word = command.split(' ')[1]
-                print "Sleeping for %s." % word
+                print("Sleeping for %s." % word)
                 time.sleep(int(word))
                 continue
             if command.startswith("POLL"): # We will have to POLL vm1
@@ -323,7 +323,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                 os.system(cmd)
                 continue
 
-            print "Executing command: %s" % command
+            print("Executing command: %s" % command)
             shell_command = command
 
             if re.search('^vm[0-9] ', command):
@@ -353,7 +353,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                 break
             except Exception as err: #execute failed for some reason, we don't know why
                 status = False
-                print err
+                print(err)
                 log.error(err)
                 break
 
@@ -361,13 +361,13 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
 
     finally:
         # Now for stateless jobs
-        print "\n\nJob status: %s\n\n" % status
+        print("\n\nJob status: %s\n\n" % status)
         nongating = {'number':0, 'pass':0, 'fail':0}
 
         with codecs.open(result_path, 'w', encoding='utf-8') as fobj:
-            for key, value in STR.iteritems():
+            for key, value in STR.items():
                 fobj.write("command: %s\n" % value['command'])
-                print "command: %s" % value['command']
+                print("command: %s" % value['command'])
                 if value['command'].find(' ## ') != -1 or value['command'].startswith('## '):
                     nongating['number'] += 1
                     if value['status'] == False:
@@ -375,21 +375,21 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                     else:
                         nongating['pass'] += 1
                 fobj.write("status: %s\n" % value['status'])
-                print "status: %s\n" % value['status']
+                print("status: %s\n" % value['status'])
                 fobj.write(value['result'])
-                print value['result']
+                print(value['result'])
                 fobj.write("\n")
-                print "\n"
+                print("\n")
             if timeout_issue: # We have 10 minutes timeout in the last command.
                 msg = "Error: We have socket timeout in the last command."
                 fobj.write(msg)
-                print msg
+                print(msg)
             if ssh_issue: # We have 10 minutes timeout in the last command.
                 msg = "Error: SSH into the system failed."
                 fobj.write(msg)
-                print msg
+                print(msg)
             fobj.write("\n\n")
-            print "\n\n"
+            print("\n\n")
             msg = """Non gating tests status:
 Total:{0}
 Passed:{1}

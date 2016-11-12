@@ -1,4 +1,3 @@
-
 import os
 import re
 import time
@@ -24,7 +23,11 @@ class Result(object):
     """
     def __init__(self, text):
         # type: (str) -> None
-        self.text = text # type: str
+        try:
+            clean_text = text.decode('utf-8')
+        except AttributeError:
+            clean_text = text
+        self.text = clean_text # type: str
         self.return_code = None # type: int
 
     @property
@@ -292,7 +295,6 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
     with open(jobpath) as fobj:
         commands = fobj.readlines()
 
-
     try:
         for command in commands:
             negative = ''
@@ -336,6 +338,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                 vm_name = 'vm1'
                 shell_command = command
                 config = vms[vm_name]
+
             try:
                 result, negative = execute(config, shell_command)
                 status = update_result(result, command, negative)
@@ -380,14 +383,17 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                 print(value['result'])
                 fobj.write("\n")
                 print("\n")
+
             if timeout_issue: # We have 10 minutes timeout in the last command.
                 msg = "Error: We have socket timeout in the last command."
                 fobj.write(msg)
                 print(msg)
+
             if ssh_issue: # We have 10 minutes timeout in the last command.
                 msg = "Error: SSH into the system failed."
                 fobj.write(msg)
                 print(msg)
+
             fobj.write("\n\n")
             print("\n\n")
             msg = """Non gating tests status:

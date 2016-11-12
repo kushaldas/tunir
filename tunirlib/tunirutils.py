@@ -397,10 +397,9 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
             fobj.write("\n\n")
             print("\n\n")
             msg = """Non gating tests status:
-Total:{0}
-Passed:{1}
-Failed:{2}""".format(nongating['number'], nongating['pass'],
-                nongating['fail'])
+Total:{number}
+Passed:{pass}
+Failed:{fail}""".format(**nongating)
             fobj.write(msg)
             print(msg)
         return status

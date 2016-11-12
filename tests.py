@@ -4,8 +4,15 @@ import sys
 import tempfile
 from collections import OrderedDict
 from contextlib import contextmanager
-from StringIO import StringIO
-from mock import patch, Mock
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+try:
+    from mock import patch, Mock
+except ImportError:
+    from unittest.mock import patch, Mock
 
 import tunirlib
 from tunirlib.tunirutils import Result, system
@@ -184,7 +191,7 @@ class UpdateResultTest(unittest.TestCase):
             tunirutils.update_result(res, command, negative)
 
         res = [True, True, False]
-        for out, result in zip(tunirlib.STR.iteritems(), res):
+        for out, result in zip(tunirlib.STR.items(), res):
             self.assertEqual(out[1]['status'], result)
 
 
@@ -204,4 +211,3 @@ class TestVagrant(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

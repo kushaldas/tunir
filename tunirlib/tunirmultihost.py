@@ -3,7 +3,10 @@ import sys
 import time
 import signal
 import random
-from io import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from Crypto.PublicKey import RSA
 from paramiko.rsakey import RSAKey
 import subprocess
@@ -69,6 +72,7 @@ def create_rsa_key(private_key):
     :param private_key: String version of the private key
     :return: The RSAKey object to be used in paramiko
     """
+
     fobj = StringIO(private_key)
     key = RSAKey.from_private_key(fobj)
     return key
@@ -305,7 +309,6 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
 
 
         # This is where we test
-
         status = run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir, extra_config=extra_config)
     except Exception as e:
         import traceback

@@ -202,24 +202,28 @@ def execute(config, command, container=None):
     :return: (Output text, string)
     """
     result = None
-    negative = 'no'
+    command_type = 'gating'
+    command_status = {
+        'gating': 'no',
+        'expect_failure': 'yes',
+        'non_gating': 'dontcare',
+    }
+
     if command.startswith('@@'):
+        command_type = 'expect_failure'
         command = command[3:].strip()
-        result = run(config['host_string'], config.get('port', '22'), config['user'],
-                         config.get('password', None), command, key_filename=config.get('key', None),
-                         timeout=config.get('timeout', 600), pkey=config.get('pkey', None))
-        if result.return_code != 0:  # If the command does not fail, then it is a failure.
-            negative = 'yes'
     elif command.startswith('##'):
+        command_type = 'non_gating'
         command = command[3:].strip()
-        result = run(config['host_string'], config.get('port', '22'), config['user'],
-                         config.get('password', None), command, key_filename=config.get('key', None),
-                         timeout=config.get('timeout', 600), pkey=config.get('pkey', None))
-        negative = 'dontcare'
-    else:
-        result = run(config['host_string'], config.get('port', '22'), config['user'],
-                         config.get('password', None), command, key_filename=config.get('key', None),
-                         timeout=config.get('timeout', 600), pkey=config.get('pkey', None))
+
+    result = run(config['host_string'], config.get('port', '22'), config['user'],
+                     config.get('password', None), command, key_filename=config.get('key', None),
+                     timeout=config.get('timeout', 600), pkey=config.get('pkey', None))
+
+    negative = command_status[command_type]
+    if result.return_code != 0 and command_type is 'expect_failure':  # If the command does not fail, then it is a failure.
+        negative = 'yes'
+
     return result, negative
 
 def update_result(result, command, negative):

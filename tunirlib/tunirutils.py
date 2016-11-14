@@ -371,7 +371,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
             for key, value in STR.items():
                 fobj.write("command: %s\n" % value['command'])
                 print("command: %s" % value['command'])
-                if value['command'].find(' ## ') != -1 or value['command'].startswith('## '):
+                if value['command'].startswith((' ##', '##')):
                     nongating['number'] += 1
                     if value['status'] == False:
                         nongating['fail'] += 1

@@ -3,7 +3,7 @@
 from setuptools import find_packages, setup
 
 setup(name = 'tunir',
-    version = '0.16',
+    version = '0.16.1',
     description = "Simple testing system.",
     long_description = "A simple testing system which can be maintained.",
     platforms = ["Linux"],

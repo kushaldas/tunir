@@ -170,7 +170,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
     if debug:
         print(config_path)
     config = None
-    vcpu = '1'
+    vcpu = '2'
     vms = {} # Empty directory to store vm details
     dirs_to_delete = [] # We will delete those at the end
     vm_keys = None

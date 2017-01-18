@@ -27,12 +27,13 @@ We are currently depended on the following projects or libraries.
 - typing
 - python-systemd (python2-systemd package in Fedora)
 - Ansible (optional)
+- libcloud
 
 
 
 You can install them in Fedora by the following command::
 
-    $ sudo dnf install libguestfs-tools python-paramiko docker-io vagrant-libvirt ansible net-tools python-crypto python2-typing python2-systemd
+    $ sudo dnf install libguestfs-tools python-paramiko docker-io vagrant-libvirt ansible net-tools python-crypto python2-typing python2-systemd python-libcloud
 
 
 .. note:: Remember to install python2-systemd package using dnf only

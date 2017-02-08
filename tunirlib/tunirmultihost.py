@@ -129,6 +129,7 @@ def boot_qcow2(image, seed, ram=1024, vcpu='1'):
                  'bridge,br=virbr0',
                  '-net',
                  'nic,macaddr={0},model=virtio'.format(mac),
+                 '-device', 'virtio-rng-pci', # https://bugzilla.redhat.com/show_bug.cgi?id=1212082
                  '-display',
                  'none'
                  ]

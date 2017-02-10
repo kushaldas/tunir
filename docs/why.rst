@@ -1,5 +1,5 @@
-Why another CI?
-================
+Why another testing tool?
+===========================
 
 I have used Jenkins before. I was maintaining one instance in one of my VPS
 instance.  The amount of RAM required by Jenkins was too much for my small VM.
@@ -14,4 +14,6 @@ This is the point where I came up with Tunir. Tunir is a simple testing tool
 that will help me run automated tests for the cloud images. I kept the system
 generic enough to execute any kind of tests people want.
 
-The configuration is very minimal with Tunir.
+The configuration is very minimal with Tunir. There is also a golang verion
+called `gotun <https://gotun.rtfd.io>`_ which has better option to run the tests
+inside OpenStack or AWS.

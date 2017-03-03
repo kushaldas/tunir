@@ -1,7 +1,8 @@
 AWS support
 ============
 
-.. note:: New feature from 0.13 release
+.. note:: Please use the `gotun <https://gotun.readthedocs.io/en/latest/>`_ project if you want
+        to spin up your instances on AWS or OpenStack.
 
 Now we have support to use AWS for testing using Tunir. We can have both HVM,
 and paravirtual types of instances to run the test. You will require `Python

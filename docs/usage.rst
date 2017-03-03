@@ -183,7 +183,7 @@ executed on vm2.
 Using Ansible
 --------------
 
-.. note:: If you want to run Ansible playbooks in your test, please have a look at the `gotun <https://gotun.rtfd.io>`_, it has
+.. note:: If you want to run Ansible playbooks in your test, please have a look at the `gotun <https://gotun.readthedocs.io/en/latest/>`_ project, it has
             better support for running Ansible, or any other tool in the host as the part of the test.
 
 .. versionadded:: 0.14

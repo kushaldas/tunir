@@ -9,6 +9,9 @@ Welcome to Tunir
 Tunir is a simple testing tool. The goal is to have a system which is
 simple to setup, and easy to maintain.
 
+.. note:: Please use the `gotun <https://gotun.readthedocs.io/en/latest/>`_ project if you want
+    to spin up your instances on AWS or OpenStack.
+
 Contents:
 
 .. toctree::

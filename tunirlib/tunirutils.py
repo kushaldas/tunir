@@ -101,7 +101,8 @@ def poll(config):
             result = run(config['host_string'], config.get('port', '22'), config['user'],
                          config.get('password', None), 'true', key_filename=config.get('key', None),
                          timeout=config.get('timeout', 60), pkey=config.get('pkey', None))
-            return True
+            if result.return_code == 0:
+                return True
         except: # Keeping trying
             time.sleep(10)
     return False

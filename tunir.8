@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "TUNIR" "8" "June 16, 2016" "0.16" "Tunir"
+.TH "TUNIR" "8" "Mar 03, 2017" "0.16" "Tunir"
 .SH NAME
 tunir \- Tunir, the simple CI with a big heart.
 .
@@ -35,7 +35,7 @@ Tunir is a simple testing tool. The goal is to have a system which is
 simple to setup, and easy to maintain.
 .sp
 Contents:
-.SH WHY ANOTHER CI?
+.SH WHY ANOTHER TESTING TOOL?
 .sp
 I have used Jenkins before. I was maintaining one instance in one of my VPS
 instance.  The amount of RAM required by Jenkins was too much for my small VM.
@@ -50,7 +50,9 @@ This is the point where I came up with Tunir. Tunir is a simple testing tool
 that will help me run automated tests for the cloud images. I kept the system
 generic enough to execute any kind of tests people want.
 .sp
-The configuration is very minimal with Tunir.
+The configuration is very minimal with Tunir. There is also a golang verion
+called \fI\%gotun\fP which has better option to run the tests
+inside OpenStack or AWS.
 .SH INSTALLATION
 .sp
 Tunir is written in Python. Currently it works with Python2.7+
@@ -91,6 +93,8 @@ typing
 python\-systemd (python2\-systemd package in Fedora)
 .IP \(bu 2
 Ansible (optional)
+.IP \(bu 2
+libcloud
 .UNINDENT
 .sp
 You can install them in Fedora by the following command:
@@ -99,7 +103,7 @@ You can install them in Fedora by the following command:
 .sp
 .nf
 .ft C
-$ sudo dnf install libguestfs\-tools python\-paramiko docker\-io vagrant\-libvirt ansible net\-tools python\-crypto python2\-typing python2\-systemd
+$ sudo dnf install libguestfs\-tools python\-paramiko docker\-io vagrant\-libvirt ansible net\-tools python\-crypto python2\-typing python2\-systemd python\-libcloud
 .ft P
 .fi
 .UNINDENT
@@ -286,6 +290,15 @@ ls /etc
 .fi
 .UNINDENT
 .UNINDENT
+.SS POLL directive
+.sp
+New in version 0.17.
+
+.sp
+We also have a \fIPOLL\fP directive, which can be used to keep polling the vm for a
+successful ssh connection. It polls after every 10 seconds, and timeout is
+currently set for 300 seconds. One should this one instead of \fISLEEP\fP directive
+after a reboot.
 .SS For Multi\-VM configurations
 .sp
 New in version 0.14.
@@ -313,6 +326,14 @@ vm1 ls /
 In the above example the line 1, and 3 will be executed on the vm1, and line 2 will be
 executed on vm2.
 .SS Using Ansible
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+If you want to run Ansible playbooks in your test, please have a look at the \fI\%gotun\fP, it has
+better support for running Ansible, or any other tool in the host as the part of the test.
+.UNINDENT
+.UNINDENT
 .sp
 New in version 0.14.
 

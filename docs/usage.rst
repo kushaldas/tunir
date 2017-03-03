@@ -147,6 +147,18 @@ Example::
     SLEEP 40
     ls /etc
 
+POLL directive
+---------------
+
+.. versionadded:: 0.17
+
+We also have a *POLL* directive, which can be used to keep polling the vm for a
+successful ssh connection. It polls after every 10 seconds, and timeout is
+currently set for 300 seconds. One should this one instead of *SLEEP* directive
+after a reboot.
+
+
+
 For Multi-VM configurations
 ###########################
 
@@ -170,6 +182,9 @@ executed on vm2.
 
 Using Ansible
 --------------
+
+.. note:: If you want to run Ansible playbooks in your test, please have a look at the `gotun <https://gotun.rtfd.io>`_, it has
+            better support for running Ansible, or any other tool in the host as the part of the test.
 
 .. versionadded:: 0.14
 

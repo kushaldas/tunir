@@ -92,6 +92,21 @@ def create_ansible_inventory(vms, filepath):
         if extra:
             fobj.write(extra)
 
+
+def poll(config):
+    "Keeps polling for a SSH connection"
+    for i in range(30):
+        try:
+            print "Polling for SSH connection"
+            result = run(config['host_string'], config.get('port', '22'), config['user'],
+                         config.get('password', None), 'true', key_filename=config.get('key', None),
+                         timeout=config.get('timeout', 60), pkey=config.get('pkey', None))
+            return True
+        except: # Keeping trying
+            time.sleep(10)
+    return False
+
+
 def run(host='127.0.0.1', port=22, user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',
                   timeout=120, pkey=None, debug=False):
@@ -289,6 +304,16 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                 print "Sleeping for %s." % word
                 time.sleep(int(word))
                 continue
+            if command.startswith("POLL"): # We will have to POLL vm1
+                #For now we will keep polling for 300 seconds.
+                # TODO: fix for multivm situation
+                pres = poll(vms['vm1'])
+                if not pres:
+                    print "Final poll failed"
+                    status = False
+                    break
+                else:
+                    continue # We don't want to execute a POLL command in the remote system
             elif command.startswith('PLAYBOOK'):
                 playbook_name = command.split(' ')[1]
                 playbook = os.path.join(ansible_path, playbook_name)

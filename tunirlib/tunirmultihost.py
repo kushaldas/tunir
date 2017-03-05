@@ -73,7 +73,7 @@ def create_rsa_key(private_key):
     :return: The RSAKey object to be used in paramiko
     """
 
-    fobj = StringIO(private_key)
+    fobj = StringIO(private_key.decode('utf-8'))
     key = RSAKey.from_private_key(fobj)
     return key
 
@@ -154,12 +154,14 @@ local-hostname: tunirtests
 public-keys:
   default: {0}
 """
+    pub_key = pub_key.decode('utf-8')
     fname = os.path.join(path, 'meta/meta-data')
     with open(fname, 'w') as fobj:
         fobj.write(text.format(pub_key))
 
     # just for testing
     if private_key:
+        private_key = private_key.decode('utf-8')
         pname = os.path.join(path, 'private.pem')
         with open(pname,'w') as fobj:
             fobj.write(private_key)

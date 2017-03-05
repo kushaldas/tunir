@@ -100,7 +100,7 @@ def poll(config):
     "Keeps polling for a SSH connection"
     for i in range(30):
         try:
-            print "Polling for SSH connection"
+            print("Polling for SSH connection")
             result = run(config['host_string'], config.get('port', '22'), config['user'],
                          config.get('password', None), 'true', key_filename=config.get('key', None),
                          timeout=config.get('timeout', 60), pkey=config.get('pkey', None))
@@ -315,7 +315,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                 # TODO: fix for multivm situation
                 pres = poll(vms['vm1'])
                 if not pres:
-                    print "Final poll failed"
+                    print("Final poll failed")
                     status = False
                     break
                 else:

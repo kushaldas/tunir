@@ -240,7 +240,7 @@ def update_result(result, command, negative):
         if result.return_code != 0:
             status = False
 
-    d = {'command': command, 'result': str(result),
+    d = {'command': command, 'result': unicode(result),
          'ret': str(result.return_code), 'status': status} # type: Dict[str, Any]
     STR[command] = d
 
@@ -404,3 +404,4 @@ class IPException(Exception):
     "We do not have an ip for a vm"
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
+

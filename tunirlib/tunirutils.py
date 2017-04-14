@@ -378,7 +378,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                 fobj.write("status: %s\n" % value['status'])
                 print "status: %s\n" % value['status']
                 fobj.write(value['result'])
-                print value['result']
+                print value['result'].encode("ascii","replace")
                 fobj.write("\n")
                 print "\n"
             if timeout_issue: # We have 10 minutes timeout in the last command.

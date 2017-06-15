@@ -4,11 +4,11 @@ include *.py
 include docs/*.rst
 include README.rst
 include MANIFEST.in
-include default.json
-include default.txt
-include vgt.json
-include vgt.txt
-include multihost.txt
-include multihost.cfg
+include examples/default.json
+include examples/default.txt
+include examples/vgt.json
+include examples/vgt.txt
+include examples/multihost.txt
+include examples/multihost.cfg
 include LICENSE
 include COPYING

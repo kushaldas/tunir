@@ -116,25 +116,24 @@ end'''
         with open('Vagrantfile', 'w') as fobj:
             fobj.write(self.vagrantfile.format(name, memory))
 
-        print "Wrote Vagrant config file."
+        print("Wrote Vagrant config file.")
         # Now actually register that image
 
         basename = os.path.basename(image_url)
 
-
-        print "Adding vagrant box."
+        print("Adding vagrant box.")
         cmd = 'vagrant box add {0} --name {1}'.format(image_url, name)
         log.info(cmd)
         out, err, retcode = system(cmd)
         # Now check for error, I will skip this.
         if retcode != 0:
             print("Error while trying to add the box.")
-            print err
+            print(err)
             self.failed = True
             return
-        print out
+        print(out)
 
-        print "Up the vagrant"
+        print("Up the vagrant")
 
         # Let us up the vagrant
         cmd = 'vagrant up --provider {0}'.format(self.provider)
@@ -142,13 +141,13 @@ end'''
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to do vagrant up the box.")
-            print err
+            print(err)
             self.failed = True
             return
-        print out
+        print(out)
 
         time.sleep(3)
-        print "Time to get Vagrant ssh-config"
+        print("Time to get Vagrant ssh-config")
 
 
         # Now let us try to get the ssh-config
@@ -157,29 +156,29 @@ end'''
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to get ssh config for the box.")
-            print err
+            print(err)
             self.failed = True
             return
-        print out
+        print(out)
         self.keys = parse_ssh_config(out)
         os.chdir(self.original_path)
 
     def destroy(self):
         os.chdir(self.path)
-        print "Let us destroy the box."
+        print("Let us destroy the box.")
         cmd = 'vagrant destroy -f'
         log.info(cmd)
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to destroy the instance.")
-            print err
+            print(err)
 
         cmd = 'vagrant box remove {0} -f'.format(self.name)
         log.info(cmd)
         out, err, retcode = system(cmd)
         if retcode != 0:
             print("Error while trying to remove the box.")
-            print err
+            print(err)
 
         if self.provider == 'libvirt':
             refresh_vol_pool() # Remove libvirt cache
@@ -217,5 +216,4 @@ if __name__ == '__main__':
   IdentitiesOnly yes
   LogLevel FATAL
 '''
-    print parse_ssh_config(data)
-
+    print(parse_ssh_config(data))

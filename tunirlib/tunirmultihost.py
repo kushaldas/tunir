@@ -3,12 +3,18 @@ import sys
 import time
 import signal
 import random
-import cStringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from Crypto.PublicKey import RSA
 from paramiko.rsakey import RSAKey
 import subprocess
 import tempfile
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 import logging
 from pprint import pprint
 from .tunirutils import run, clean_tmp_dirs, system, run_job
@@ -51,7 +57,7 @@ def inject_ip_to_vms(vms, private_key):
     """
 
     text = "\n"
-    for k, v in vms.iteritems():
+    for k, v in vms.items():
         line = ''
         # ip hostname format for /etc/hosts
         if 'hostname' in v:
@@ -66,8 +72,9 @@ def create_rsa_key(private_key):
     :param private_key: String version of the private key
     :return: The RSAKey object to be used in paramiko
     """
-    fobj = cStringIO.StringIO(private_key)
-    key = RSAKey.from_private_key(file_obj=fobj)
+
+    fobj = StringIO(private_key.decode('utf-8'))
+    key = RSAKey.from_private_key(fobj)
     return key
 
 def generate_sshkey(bits=2048):
@@ -147,12 +154,14 @@ local-hostname: tunirtests
 public-keys:
   default: {0}
 """
+    pub_key = pub_key.decode('utf-8')
     fname = os.path.join(path, 'meta/meta-data')
     with open(fname, 'w') as fobj:
         fobj.write(text.format(pub_key))
 
     # just for testing
     if private_key:
+        private_key = private_key.decode('utf-8')
         pname = os.path.join(path, 'private.pem')
         with open(pname,'w') as fobj:
             fobj.write(private_key)
@@ -302,14 +311,13 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
 
 
         # This is where we test
-
         status = run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir, extra_config=extra_config)
     except Exception as e:
         import traceback
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print "*** print_tb:"
+        print("*** print_tb:")
         traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-        print "*** print_exception:"
+        print("*** print_exception:")
         traceback.print_exception(exc_type, exc_value, exc_traceback,
                               limit=2, file=sys.stdout)
 
@@ -328,7 +336,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             # Put the ip/hostnames into a text file
             filename = os.path.join(seed_dir, 'hostnames.txt')
             with open(filename, 'w') as fobj:
-                for k, v in only_vms.iteritems():
+                for k, v in only_vms.items():
                     fobj.write('{0}={1}\n'.format(k,v['ip']))
             return status # Do not destroy for debug case
         for vm in only_vms.values():
@@ -340,11 +348,3 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             os.kill(job_pid, signal.SIGKILL)
         clean_tmp_dirs(dirs_to_delete)
         return status
-
-
-
-
-
-
-
-

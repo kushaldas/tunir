@@ -9,13 +9,13 @@ qcow2) and then booting them locally with qemu.
 """
 
 import subprocess
-import config
+from .config import USER_DATA
 
 
 def create_user_data(path, password):
     # type: (str, str) -> str
     "Creates a simple user data file"
-    file_data = config.USER_DATA % password
+    file_data = USER_DATA % password
     with open(path + '/meta/user-data', 'w') as user_file:
         user_file.write(file_data)
     return "user-data file generated."
@@ -36,5 +36,3 @@ def create_seed_img(meta_path, img_path):
         return "seed.img created at %s" % img_path
 
     return "creation of the seed.img failed."
-
-

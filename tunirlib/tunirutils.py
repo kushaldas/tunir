@@ -23,11 +23,7 @@ class Result(object):
     """
     def __init__(self, text):
         # type: (str) -> None
-        try:
-            clean_text = text.decode('utf-8')
-        except AttributeError:
-            clean_text = text
-        self.text = clean_text # type: str
+        self.text = text # type: str
         self.return_code = None # type: int
 
     @property

@@ -11,6 +11,7 @@ from cryptography.hazmat.backends import default_backend
 from paramiko.rsakey import RSAKey
 import subprocess
 import tempfile
+from typing import Tuple, Dict
 
 import configparser as ConfigParser
 import logging
@@ -65,7 +66,8 @@ def inject_ip_to_vms(vms, private_key):
         text += line
     true_test(vms, private_key, """sudo sh -c 'echo -e "{0}" >> /etc/hosts'""".format(text))
 
-def create_rsa_key(private_key):
+
+def create_rsa_key(private_key: str) -> RSAKey:
     """ Creates the RSAKey for paramiko.
     :param private_key: String version of the private key
     :return: The RSAKey object to be used in paramiko
@@ -75,7 +77,8 @@ def create_rsa_key(private_key):
     key = RSAKey.from_private_key(fobj)
     return key
 
-def generate_sshkey(bits=2048):
+
+def generate_sshkey(bits: int=2048) -> Tuple[str,str] :
     '''
     Returns private key and public key
     '''

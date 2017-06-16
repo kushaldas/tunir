@@ -41,8 +41,7 @@ class Result(object):
     def __repr__(self):
         return self.text
 
-    def __unicode__(self):
-        return unicode(self.text, encoding='utf-8', errors='replace')
+
 
 def match_vm_numbers(vm_keys, jobpath):
     """Matches vm definations mentioned in config, and in the job file.
@@ -247,7 +246,7 @@ def update_result(result, command, negative):
         if result.return_code != 0:
             status = False
 
-    d = {'command': command, 'result': unicode(result),
+    d = {'command': command, 'result': result,
          'ret': str(result.return_code), 'status': status} # type: Dict[str, Any]
     STR[command] = d
 
@@ -384,7 +383,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                         nongating['pass'] += 1
                 fobj.write("status: %s\n" % value['status'])
                 print("status: %s\n" % value['status'])
-                fobj.write(value['result'])
+                fobj.write(str(value['result']))
                 print(value['result'])
                 fobj.write("\n")
                 print("\n")

@@ -3,18 +3,16 @@ import sys
 import time
 import signal
 import random
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-from Crypto.PublicKey import RSA
+
+from io import StringIO
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
 from paramiko.rsakey import RSAKey
 import subprocess
 import tempfile
-try:
-    import ConfigParser
-except ImportError:
-    import configparser as ConfigParser
+
+import configparser as ConfigParser
 import logging
 from pprint import pprint
 from .tunirutils import run, clean_tmp_dirs, system, run_job
@@ -73,18 +71,28 @@ def create_rsa_key(private_key):
     :return: The RSAKey object to be used in paramiko
     """
 
-    fobj = StringIO(private_key.decode('utf-8'))
+    fobj = StringIO(private_key)
     key = RSAKey.from_private_key(fobj)
     return key
 
 def generate_sshkey(bits=2048):
     '''
-    Returns private key and public key, and the key object
+    Returns private key and public key
     '''
-    key = RSA.generate(bits, e=65537)
-    public_key = key.publickey().exportKey("OpenSSH")
-    private_key = key.exportKey("PEM")
-    return private_key, public_key, key
+    key = rsa.generate_private_key(backend=default_backend(), public_exponent=65537, \
+                                   key_size=bits)
+
+    # OpenSSH format public key
+    pkey = key.public_key().public_bytes(serialization.Encoding.OpenSSH, \
+                                               serialization.PublicFormat.OpenSSH)
+
+    # PEM format private key
+    pem = key.private_bytes(encoding=serialization.Encoding.PEM,
+                            format=serialization.PrivateFormat.TraditionalOpenSSL,
+                            encryption_algorithm=serialization.NoEncryption())
+    private_key = pem.decode('utf-8')
+    public_key = pkey.decode('utf-8')
+    return private_key, public_key
 
 def scan_arp(macaddr):
     "Find the ip for the given mac addr"
@@ -154,14 +162,12 @@ local-hostname: tunirtests
 public-keys:
   default: {0}
 """
-    pub_key = pub_key.decode('utf-8')
     fname = os.path.join(path, 'meta/meta-data')
     with open(fname, 'w') as fobj:
         fobj.write(text.format(pub_key))
 
-    # just for testing
+    # just for debugging
     if private_key:
-        private_key = private_key.decode('utf-8')
         pname = os.path.join(path, 'private.pem')
         with open(pname,'w') as fobj:
             fobj.write(private_key)
@@ -235,7 +241,7 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
         meta = os.path.join(seed_dir, 'meta')
         os.makedirs(meta)
         print("Generating SSH keys")
-        private_key, public_key, KEY = generate_sshkey()
+        private_key, public_key = generate_sshkey()
         create_user_data(seed_dir, "passw0rd")
         create_ssh_metadata(seed_dir, public_key, private_key)
         create_seed_img(meta, seed_dir)

@@ -3,19 +3,20 @@ import sys
 import time
 import signal
 import random
+import subprocess
+import tempfile
+import logging
+import configparser as ConfigParser
+
 
 from io import StringIO
+from pprint import pprint
+from paramiko.rsakey import RSAKey
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
-from paramiko.rsakey import RSAKey
-import subprocess
-import tempfile
 from typing import Tuple, Dict, Any, Union, List
 
-import configparser as ConfigParser
-import logging
-from pprint import pprint
 from .tunirutils import run, clean_tmp_dirs, system, run_job, TunirConfig
 from .tunirutils import match_vm_numbers, create_ansible_inventory
 from .tunirutils import IPException

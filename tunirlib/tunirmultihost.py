@@ -23,7 +23,8 @@ from .tunirutils import IPException
 from .testvm import  create_user_data, create_seed_img
 log = logging.getLogger('tunir')
 
-def true_test(vms, private_key, command='cat /proc/cpuinfo'):
+
+def true_test(vms: Dict[str,Dict[str,str]], private_key: str, command: str='cat /proc/cpuinfo') -> None:
     """
     Runs a given command to the list of vms. Currently using it
     to push the list of vms/ips to the /etc/hosts files.
@@ -38,7 +39,7 @@ def true_test(vms, private_key, command='cat /proc/cpuinfo'):
     for vm in vms.values():
         for i in range(5):
             try:
-                res = run(vm['ip'], port=vm['port'], user=vm['user'], command=command,pkey=key, debug=False)
+                run(vm['ip'], port=vm['port'], user=vm['user'], command=command,pkey=key, debug=False)
                 break
             except Exception as e:
                 print("Try {0} failed for IP injection to /etc/hosts.".format(i))
@@ -46,6 +47,7 @@ def true_test(vms, private_key, command='cat /proc/cpuinfo'):
                     raise e
                 time.sleep(30)
                 continue
+
 
 def inject_ip_to_vms(vms, private_key):
     """

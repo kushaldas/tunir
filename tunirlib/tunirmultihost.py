@@ -113,15 +113,12 @@ def read_multihost_config(filepath: str) -> TunirConfig:
     '''Reads the given filepath, and returns a TunirConfig with all required information.
     '''
     result = TunirConfig()
-    print(result)
-    print(result.general)
-    print(result.vms)
     config = ConfigParser.RawConfigParser()
     config.read(filepath)
     sections = config.sections()
     for sec in sections:
         items = config.items(sec)
-        out = dict(items)  # type: Dict[str,str]
+        out = {k:str(v) for k,v in items}  # type: Dict[str,str]
         if sec == 'general':
             result.general = out
         else:

@@ -11,7 +11,7 @@ from cryptography.hazmat.backends import default_backend
 from paramiko.rsakey import RSAKey
 import subprocess
 import tempfile
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Any
 
 import configparser as ConfigParser
 import logging
@@ -97,7 +97,7 @@ def generate_sshkey(bits: int=2048) -> Tuple[str,str] :
     public_key = pkey.decode('utf-8')
     return private_key, public_key
 
-def scan_arp(macaddr):
+def scan_arp(macaddr: str) -> str:
     "Find the ip for the given mac addr"
     output, err, eid = system('arp -an')
     lines = output.split('\n')
@@ -106,8 +106,10 @@ def scan_arp(macaddr):
         if len(words) > 3:
             if words[3].strip() == macaddr:
                 return words[1].strip('()')
+    return ''
 
-def read_multihost_config(filepath):
+
+def read_multihost_config(filepath: str) -> Dict[str,Any]:
     '''Reads the given filepath, and returns a dict with all required information.
     '''
     result = {}
@@ -120,7 +122,8 @@ def read_multihost_config(filepath):
         result[sec] = out
     return result
 
-def random_mac():
+
+def random_mac() -> str:
     """
     Generates a random MAC address
     :return: A string containing the random MAC address.
@@ -131,7 +134,8 @@ def random_mac():
         random.randint(0x00, 0xff) ]
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
-def boot_qcow2(image, seed, ram=1024, vcpu='1'):
+
+def boot_qcow2(image:str , seed: str, ram: int=1024, vcpu: str='1') -> Tuple[subprocess.Popen, str]:
     "Boots the image with a seed image"
     mac = random_mac()
     boot_args = ['/usr/bin/qemu-kvm',

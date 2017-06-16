@@ -32,12 +32,15 @@ class Result(object):
         return str(self.text)
 
     def __str__(self):
-        return self.text
+        return str(self.text)
 
     def __repr__(self):
         return self.text
 
-
+class TunirConfig:
+    def __init__(self) -> None:
+        self.general = {}  # type: Dict[str, str]
+        self.vms = {}  # type: Dict[str, str]
 
 def match_vm_numbers(vm_keys, jobpath):
     """Matches vm definations mentioned in config, and in the job file.
@@ -242,8 +245,8 @@ def update_result(result, command, negative):
         if result.return_code != 0:
             status = False
 
-    d = {'command': command, 'result': result,
-         'ret': str(result.return_code), 'status': status} # type: Dict[str, Any]
+    d = {'command': command, 'result': result.text.decode('utf-8'),
+         'ret': str(result.return_code), 'status': status} # type: Dict[str,str]
     STR[command] = d
 
 
@@ -254,8 +257,8 @@ def update_result(result, command, negative):
     return True
 
 
-def run_job(jobpath, job_name='', extra_config={}, container=None,
-            port=None, vms=[], ansible_path='' ):
+def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, container=None,
+            port: str='22', config: TunirConfig = None, ansible_path: str='' ) -> bool:
     """
     Runs the given command using paramiko.
 
@@ -277,18 +280,18 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
     # and execute them one by one, we need to save
     # the result too.
     commands = [] # type: List[str]
-    status = True
-    timeout_issue = False
-    ssh_issue = False
+    status = True # type: bool
+    timeout_issue = False # type: bool
+    ssh_issue = False # type: bool
 
-    result_path = extra_config['result_path']
-    ansible_inventory_path = None
-    private_key_path = None
-    private_key_path = None
+    result_path = extra_config['result_path']  # type: str
+    ansible_inventory_path = None  # type: str
+    private_key_path = None  # type: str
+    private_key_path = None  # type: str
     if ansible_path:
-        ansible_inventory_path = os.path.join(ansible_path, 'tunir_ansible')
-        if 'keypath' in vms['general']:
-            private_key_path = vms['general']['keypath']
+        ansible_inventory_path = os.path.join(ansible_path, 'tunir_ansible')  # type: str
+        if 'keypath' in config.general:
+            private_key_path = config.general['keypath']
         else:
             private_key_path = os.path.join(ansible_path, 'private.pem')
 
@@ -309,7 +312,7 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
             if command.startswith("POLL"): # We will have to POLL vm1
                 #For now we will keep polling for 300 seconds.
                 # TODO: fix for multivm situation
-                pres = poll(vms['vm1'])
+                pres = poll(config.vms['vm1'])
                 if not pres:
                     print("Final poll failed")
                     status = False
@@ -333,14 +336,14 @@ def run_job(jobpath, job_name='', extra_config={}, container=None,
                 index = command.find(' ')
                 vm_name = command[:index]
                 shell_command = command[index+1:]
-                config = vms[vm_name]
+                localconfig = config.vms[vm_name]
             else: #At this case, all special keywords checked, now it will run on vm1
                 vm_name = 'vm1'
                 shell_command = command
-                config = vms[vm_name]
+                localconfig = config.vms[vm_name]
 
             try:
-                result, negative = execute(config, shell_command)
+                result, negative = execute(localconfig, shell_command)
                 status = update_result(result, command, negative)
                 if not status:
                     break

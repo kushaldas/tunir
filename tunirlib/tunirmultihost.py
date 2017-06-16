@@ -11,12 +11,12 @@ from cryptography.hazmat.backends import default_backend
 from paramiko.rsakey import RSAKey
 import subprocess
 import tempfile
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Union, List
 
 import configparser as ConfigParser
 import logging
 from pprint import pprint
-from .tunirutils import run, clean_tmp_dirs, system, run_job
+from .tunirutils import run, clean_tmp_dirs, system, run_job, TunirConfig
 from .tunirutils import match_vm_numbers, create_ansible_inventory
 from .tunirutils import IPException
 from .testvm import  create_user_data, create_seed_img
@@ -109,17 +109,23 @@ def scan_arp(macaddr: str) -> str:
     return ''
 
 
-def read_multihost_config(filepath: str) -> Dict[str,Any]:
-    '''Reads the given filepath, and returns a dict with all required information.
+def read_multihost_config(filepath: str) -> TunirConfig:
+    '''Reads the given filepath, and returns a TunirConfig with all required information.
     '''
-    result = {}
+    result = TunirConfig()
+    print(result)
+    print(result.general)
+    print(result.vms)
     config = ConfigParser.RawConfigParser()
     config.read(filepath)
     sections = config.sections()
     for sec in sections:
         items = config.items(sec)
-        out = dict(items)
-        result[sec] = out
+        out = dict(items)  # type: Dict[str,str]
+        if sec == 'general':
+            result.general = out
+        else:
+            result.vms[sec] = out
     return result
 
 
@@ -162,7 +168,7 @@ def boot_qcow2(image:str , seed: str, ram: int=1024, vcpu: str='1') -> Tuple[sub
 
     return vm, mac
 
-def create_ssh_metadata(path, pub_key, private_key=None):
+def create_ssh_metadata(path: str, pub_key: str, private_key: str='') -> None:
     "Creates the user data with ssh key"
     text = """instance-id: iid-123456
 local-hostname: tunirtests
@@ -180,53 +186,54 @@ public-keys:
             fobj.write(private_key)
         os.system('chmod 0600 {0}'.format(pname))
 
-def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.'):
+def start_multihost(jobname: str, jobpath: str, debug: bool=False, oldconfig: Dict[str,str]=None, config_dir: str='.') -> bool:
     "Start the executation here."
     temppath = tempfile.mktemp()
-    extra_config = {'result_path' : temppath}
+    extra_config = {'result_path' : temppath} # type: Dict[str,str]
     print('Result file at: {0}'.format(temppath))
-    status = 0
-    ansible_inventory_path = None
-    fault_in_ip_addr = False
-    private_key = None
-    config_path = os.path.join(config_dir, jobname + '.cfg')
+    status = True # type: bool
+    ansible_inventory_path = "" # type: str
+    fault_in_ip_addr = False # type: bool
+    private_key = "" # type: str
+    config_path = os.path.join(config_dir, jobname + '.cfg') # type: str
     if debug:
         print(config_path)
-    config = None
-    vcpu = '2'
-    vms = {} # Empty directory to store vm details
-    dirs_to_delete = [] # We will delete those at the end
+    config = TunirConfig()  # type: TunirConfig
+    vcpu = '2'  # type: str
+    #vms = {}  # Empty directory to store vm details
+    dirs_to_delete = [] # type: List[str] # We will delete those at the end
     vm_keys = None
     if not oldconfig:
         config = read_multihost_config(config_path)
-        ram = config.get('general').get('ram', '1024')
-        vcpu = config.get('general').get('cpu', '1')
-        result_path = config.get('general').get('result_path', None)
+        ram = config.general.get('ram', '1024') # type: str
+        vcpu = config.general.get('cpu', '1')
+        result_path = config.general.get('result_path', None)
         if result_path:
             extra_config['result_path'] = result_path
-        vm_keys = [name for name in config.keys() if name.startswith('vm')]
-        if 'key' in config['general']:
+        vm_keys = [name for name in config.vms.keys() if name.startswith('vm')]
+        if 'key' in config.general:
             data = ''
             try:
-                with open(config['general']['key']) as fobj:
+                localfilename = config.general['key']  # type: str
+                with open(localfilename) as fobj:
                     data = fobj.read()
             except Exception as e:
                 print(e)
                 raise e
-            config['general']['pkey'] = create_rsa_key(data)
+            config.general['pkey'] = create_rsa_key(data)
             private_key = data
-            config['general']['keypath'] = config['general']['key']
+            config.general['keypath'] = config.general['key']
     else: # For a single vm job or Vagrant or AWS
-        config = {'vm1': oldconfig}
-        config['general'] = {'ansible_dir': oldconfig.get('ansible_dir', None)}
+        config.vms = {'vm1': oldconfig}
+        config.general = {'ansible_dir': oldconfig.get('ansible_dir', None)}
         if 'key' in oldconfig:
             data = ''
             with open(oldconfig['key']) as fobj:
                 data = fobj.read()
-            config['general']['pkey'] = create_rsa_key(data)
-            config['general']['keypath'] = oldconfig['key']
+            config.general['pkey'] = create_rsa_key(data)
+            config.general['keypath'] = oldconfig['key']
             private_key = data
-            config['general']['key'] = data
+            config.general['key'] = data
         ram = oldconfig.get('ram', '1024')
         vm_keys = ['vm1',]
     #TODO Parse the job file first
@@ -236,14 +243,14 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
 
     # For extra vm(s) in the job file fail fast
     if not match_vm_numbers(vm_keys, jobpath):
-        return
+        return False
 
     # First let us create the seed image
     seed_dir = tempfile.mkdtemp()
     print('Created {0}'.format(seed_dir))
     os.system('chmod 0777 %s' % seed_dir)
     dirs_to_delete.append(seed_dir)
-    if 'key' not in config['general']:
+    if 'key' not in config.general:
         # Then we create key and metadata
         meta = os.path.join(seed_dir, 'meta')
         os.makedirs(meta)
@@ -262,22 +269,22 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             # Now create each vm one by one.
             # Get the current ips
             this_vm = {}
-            if 'ip' not in config[vm_c]:
+            if 'ip' not in config.vms[vm_c]:
                 current_d = tempfile.mkdtemp()
                 print('Created {0}'.format(current_d))
                 os.system('chmod 0777 %s' % current_d)
                 dirs_to_delete.append(current_d)
                 system('cp  {0} {1}'.format(seed_image, current_d))
                 # Next copy the qcow2 image
-                image_path = config[vm_c].get('image')
+                image_path = config.vms[vm_c].get('image')
                 os.system('cp {0} {1}'.format(image_path, current_d))
                 image = os.path.join(current_d, os.path.basename(image_path))
                 log.info("Booting {0}".format(image))
 
-                vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), ram, vcpu=vcpu)
-                this_vm.update({'process': vm, 'mac': mac})
+                vm, mac = boot_qcow2(image, os.path.join(current_d, 'seed.img'), int(ram), vcpu=vcpu)
+                this_vm.update({'process': str(vm.pid), 'mac': mac})
                 # Let us get this vm in the tobe delete list even if the IP never comes up
-                vms[vm_c] = this_vm
+                config.vms[vm_c].update(this_vm)
                 print("We will wait for 45 seconds for the image to boot up.")
                 time.sleep(45)
                 latest_ip = scan_arp(mac)
@@ -287,31 +294,31 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
                 this_vm['ip'] = latest_ip
                 this_vm['host_string'] = latest_ip
                 this_vm['pkey'] = pkey
-                this_vm['port'] = config[vm_c].get('port', 22)
+                this_vm['port'] = config.vms[vm_c].get('port', '22')
             else:
-                this_vm['ip'] = config[vm_c].get('ip')
-                this_vm['host_string'] = config[vm_c].get('ip')
-                this_vm['port'] = config[vm_c].get('port', 22)
-                this_vm['pkey'] = config['general']['pkey']
+                this_vm['ip'] = config.vms[vm_c].get('ip')
+                this_vm['host_string'] = config.vms[vm_c].get('ip')
+                this_vm['port'] = config.vms[vm_c].get('port', 22)
+                this_vm['pkey'] = config.general['pkey']
 
-            this_vm['user'] = config[vm_c].get('user')
-            if 'hostname' in config[vm_c]:
-                this_vm['hostname'] = config[vm_c].get('hostname')
+            this_vm['user'] = config.vms[vm_c].get('user')
+            if 'hostname' in config.vms[vm_c]:
+                this_vm['hostname'] = config.vms[vm_c].get('hostname')
             log.info("IP of the new instance: {0}".format(this_vm.get('ip')))
 
-            vms[vm_c] = this_vm
-        only_vms = vms.copy()
-        vms['general'] = config['general']
+            config.vms[vm_c].update(this_vm)
+        #only_vms = vms.copy()
+        #vms['general'] = config['general']
         if fault_in_ip_addr:
             print('Oops no IP for this vm.')
             raise IPException
 
         # Now we are supposed to have all the vms booted.
         if debug:
-            pprint(vms)
+            pprint(config.vms)
         print(' ')
-        inject_ip_to_vms(only_vms, private_key)
-        ansible_flag = config.get('general').get('ansible_dir', None)
+        inject_ip_to_vms(config.vms, private_key)
+        ansible_flag = config.general.get('ansible_dir', None) # type: str
         if ansible_flag:
             dir_to_copy = ansible_flag
             if not dir_to_copy.endswith('/'):
@@ -320,11 +327,11 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
                 dir_to_copy += '*'
             os.system('cp -r {0} {1}'.format(dir_to_copy, seed_dir))
             ansible_inventory_path = os.path.join(seed_dir, 'tunir_ansible')
-            create_ansible_inventory(only_vms, ansible_inventory_path)
+            create_ansible_inventory(config.vms, ansible_inventory_path)
 
 
         # This is where we test
-        status = run_job(jobpath,job_name=jobname,vms=vms, ansible_path=seed_dir, extra_config=extra_config)
+        status = run_job(jobpath,job_name=jobname,config=config, ansible_path=seed_dir, extra_config=extra_config)
     except Exception as e:
         import traceback
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -338,10 +345,10 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
         if debug:
             filename = os.path.join(seed_dir, 'destroy.sh')
             with open(filename, 'w') as fobj:
-                for vm in only_vms.values():
+                for vm in config.vms.values():
                     if not 'process' in vm: # For remote vm/bare metal
                         continue
-                    job_pid = vm['process'].pid
+                    job_pid = vm['process']
                     fobj.write('kill -9 {0}\n'.format(job_pid))
                 for d in dirs_to_delete:
                     fobj.write('rm -rf {0}\n'.format(d))
@@ -349,15 +356,15 @@ def start_multihost(jobname, jobpath, debug=False, oldconfig=None, config_dir='.
             # Put the ip/hostnames into a text file
             filename = os.path.join(seed_dir, 'hostnames.txt')
             with open(filename, 'w') as fobj:
-                for k, v in only_vms.items():
+                for k, v in config.vms.items():
                     fobj.write('{0}={1}\n'.format(k,v['ip']))
             return status # Do not destroy for debug case
-        for vm in only_vms.values():
+        for vm in config.vms.values():
             if not 'process' in vm: # For remote vm/bare metal
                 continue
-            job_pid = vm['process'].pid
+            job_pid = vm['process']
             if debug:
                 print('Killing {0}'.format(job_pid))
-            os.kill(job_pid, signal.SIGKILL)
+            os.kill(int(job_pid), signal.SIGKILL)
         clean_tmp_dirs(dirs_to_delete)
         return status

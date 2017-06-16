@@ -295,7 +295,7 @@ def start_multihost(jobname: str, jobpath: str, debug: bool=False, oldconfig: Di
             else:
                 this_vm['ip'] = config.vms[vm_c].get('ip')
                 this_vm['host_string'] = config.vms[vm_c].get('ip')
-                this_vm['port'] = config.vms[vm_c].get('port', 22)
+                this_vm['port'] = config.vms[vm_c].get('port', '22')
                 this_vm['pkey'] = config.general['pkey']
 
             this_vm['user'] = config.vms[vm_c].get('user')
@@ -342,10 +342,10 @@ def start_multihost(jobname: str, jobpath: str, debug: bool=False, oldconfig: Di
         if debug:
             filename = os.path.join(seed_dir, 'destroy.sh')
             with open(filename, 'w') as fobj:
-                for vm in config.vms.values():
-                    if not 'process' in vm: # For remote vm/bare metal
+                for vmd in config.vms.values():
+                    if not 'process' in vmd: # For remote vm/bare metal
                         continue
-                    job_pid = vm['process']
+                    job_pid = vmd['process']
                     fobj.write('kill -9 {0}\n'.format(job_pid))
                 for d in dirs_to_delete:
                     fobj.write('rm -rf {0}\n'.format(d))
@@ -356,10 +356,10 @@ def start_multihost(jobname: str, jobpath: str, debug: bool=False, oldconfig: Di
                 for k, v in config.vms.items():
                     fobj.write('{0}={1}\n'.format(k,v['ip']))
             return status # Do not destroy for debug case
-        for vm in config.vms.values():
-            if not 'process' in vm: # For remote vm/bare metal
+        for vmd in config.vms.values():
+            if not 'process' in vmd: # For remote vm/bare metal
                 continue
-            job_pid = vm['process']
+            job_pid = vmd['process']
             if debug:
                 print('Killing {0}'.format(job_pid))
             os.kill(int(job_pid), signal.SIGKILL)

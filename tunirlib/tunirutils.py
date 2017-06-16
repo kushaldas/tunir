@@ -21,9 +21,12 @@ class Result(object):
     """
         To hold results from sshcommand executions.
     """
-    def __init__(self, text):
-        # type: (str) -> None
-        self.text = text # type: str
+    def __init__(self, text) -> None:
+        self.text = ""  # type: str
+        if type(text) == bytes:
+            self.text = text.decode('utf-8')
+        else:
+            self.text = text
         self.return_code = None # type: int
 
     @property
@@ -38,9 +41,10 @@ class Result(object):
         return self.text
 
 class TunirConfig:
+    "To hold the config and runtime vm information"
     def __init__(self) -> None:
         self.general = {}  # type: Dict[str, str]
-        self.vms = {}  # type: Dict[str, str]
+        self.vms = {}  # type: Dict[str, Dict[str,str]]
 
 def match_vm_numbers(vm_keys, jobpath):
     """Matches vm definations mentioned in config, and in the job file.
@@ -109,10 +113,10 @@ def poll(config):
     return False
 
 
-def run(host='127.0.0.1', port=22, user='root',
+def run(host='127.0.0.1', port='22', user='root',
                   password=None, command='/bin/true', bufsize=-1, key_filename='',
                   timeout=120, pkey=None, debug=False):
-    # type(str, int, str, str, str, int, str, int, Any, bool) -> T_Result
+    # type(str, str, str, str, str, int, str, int, Any, bool) -> T_Result
     """
     Excecutes a command using paramiko and returns the result.
     :param host: Host to connect
@@ -131,10 +135,10 @@ def run(host='127.0.0.1', port=22, user='root',
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     if password:
-        client.connect(hostname=host, port=port,
+        client.connect(hostname=host, port=int(port),
             username=user, password=password, banner_timeout=10)
     elif key_filename:
-        client.connect(hostname=host, port=port,
+        client.connect(hostname=host, port=int(port),
             username=user, key_filename=key_filename, banner_timeout=10)
     else:
         if debug:
@@ -193,7 +197,7 @@ def try_again(func):
 
 @try_again
 def execute(config, command, container=None):
-    # type: (Dict[str, Any], str, bool) -> Tuple[T_Result, str]
+    # type: (Dict[str, str], str, bool) -> Tuple[Result, str]
     """
     Executes a given command based on the system.
     :param config: Configuration dictionary.
@@ -237,15 +241,15 @@ def update_result(result, command, negative):
 
     :return: Boolean, False if the job as whole is failed.
     """
-    status = True
+    status = 'True'
     if negative == 'yes':
         if result.return_code == 0:
-            status = False
+            status = ''
     else:
         if result.return_code != 0:
-            status = False
+            status = ''
 
-    d = {'command': command, 'result': result.text.decode('utf-8'),
+    d = {'command': command, 'result': result.text,
          'ret': str(result.return_code), 'status': status} # type: Dict[str,str]
     STR[command] = d
 
@@ -287,9 +291,8 @@ def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, cont
     result_path = extra_config['result_path']  # type: str
     ansible_inventory_path = None  # type: str
     private_key_path = None  # type: str
-    private_key_path = None  # type: str
     if ansible_path:
-        ansible_inventory_path = os.path.join(ansible_path, 'tunir_ansible')  # type: str
+        ansible_inventory_path = os.path.join(ansible_path, 'tunir_ansible')
         if 'keypath' in config.general:
             private_key_path = config.general['keypath']
         else:
@@ -360,7 +363,7 @@ def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, cont
             except Exception as err: #execute failed for some reason, we don't know why
                 status = False
                 print(err)
-                log.error(err)
+                log.error(str(err))
                 break
 
         # If we are here, that means all commands ran successfully.
@@ -376,7 +379,7 @@ def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, cont
                 print("command: %s" % value['command'])
                 if value['command'].startswith((' ##', '##')):
                     nongating['number'] += 1
-                    if value['status'] == False:
+                    if not value['status']:
                         nongating['fail'] += 1
                     else:
                         nongating['pass'] += 1

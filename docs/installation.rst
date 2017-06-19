@@ -1,7 +1,7 @@
 Installation
 ============
 
-Tunir is written in Python. Currently it works with Python2.7+
+Tunir is written in Python. Currently it works with Python 3.5+
 
 Clone the repository
 ---------------------
@@ -33,7 +33,7 @@ We are currently depended on the following projects or libraries.
 
 You can install them in Fedora by the following command::
 
-    $ sudo dnf install libguestfs-tools python-paramiko docker-io vagrant-libvirt ansible net-tools python-crypto python2-typing python2-systemd python-libcloud
+    $ sudo dnf install libguestfs-tools python3-paramiko docker-io vagrant-libvirt ansible net-tools python3-crypto  python3-systemd python3-libcloud
 
 
-.. note:: Remember to install python2-systemd package using dnf only
+.. note:: Remember to install python3-systemd package using dnf only

@@ -40,13 +40,15 @@ class Result(object):
     def __repr__(self):
         return self.text
 
+
 class TunirConfig:
     "To hold the config and runtime vm information"
     def __init__(self) -> None:
         self.general = {}  # type: Dict[str, str]
         self.vms = {}  # type: Dict[str, Dict[str,str]]
 
-def match_vm_numbers(vm_keys, jobpath):
+
+def match_vm_numbers(vm_keys: List[str], jobpath: str) -> bool:
     """Matches vm definations mentioned in config, and in the job file.
 
     :param vm_keys: vm(s) from the configuration
@@ -68,11 +70,12 @@ def match_vm_numbers(vm_keys, jobpath):
         log.error(msg)
         print(msg)
         print(diff)
-        log.error(diff)
+        log.error(str(diff))
         return False
     return True
 
-def create_ansible_inventory(vms, filepath):
+
+def create_ansible_inventory(vms: Dict[str, Dict[str,str]], filepath: str) -> None:
     """Creates our inventory file for ansible
 
     :param vms: Dictionary containing vm details
@@ -98,7 +101,7 @@ def create_ansible_inventory(vms, filepath):
             fobj.write(extra)
 
 
-def poll(config):
+def poll(config: Dict[str, str]) -> bool:
     "Keeps polling for a SSH connection"
     for i in range(30):
         try:
@@ -177,9 +180,10 @@ def system(cmd):
     """
     ret = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, universal_newlines=True)
-    out, err = ret.communicate()
+    out, err = ret.communicate() # type: str, str
     returncode = ret.returncode
     return out, err, returncode
+
 
 def try_again(func):
     # type: (T_Callable) -> T_Callable
@@ -194,6 +198,7 @@ def try_again(func):
             result = func(*args, **kargs)
         return result
     return cast(T_Callable, wrapper)
+
 
 @try_again
 def execute(config, command, container=None):
@@ -313,8 +318,8 @@ def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, cont
                 time.sleep(int(word))
                 continue
             if command.startswith("POLL"): # We will have to POLL vm1
-                #For now we will keep polling for 300 seconds.
-                # TODO: fix for multivm situation
+                #  For now we will keep polling for 300 seconds.
+                #  TODO: fix for multivm situation
                 pres = poll(config.vms['vm1'])
                 if not pres:
                     print("Final poll failed")

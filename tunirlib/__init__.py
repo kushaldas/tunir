@@ -2,16 +2,25 @@ import os
 import sys
 import json
 import argparse
+import logging
+try:
+    from systemd.journal import JournalHandler
+except:
+    pass # For ubuntu boxes
+from typing import Dict
+
 from .tunirvagrant import vagrant_and_run
 from .tuniraws import aws_and_run
 from .tunirmultihost import start_multihost
 from .tunirutils import run_job, Result
 from collections import OrderedDict
-import logging
-from systemd.journal import JournalHandler
+
 
 log = logging.getLogger('tunir')
-log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='tunir'))
+try:
+    log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='tunir'))
+except:
+    pass # pass
 log.setLevel(logging.DEBUG)
 
 

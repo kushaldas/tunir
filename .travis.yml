@@ -1,6 +1,7 @@
 language: python
 sudo: false
 dist: trusty
+cache: pip
 python:
   - '3.5'
   - '3.6'

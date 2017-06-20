@@ -3,7 +3,10 @@ import sys
 import json
 import argparse
 import logging
-from systemd.journal import JournalHandler
+try:
+    from systemd.journal import JournalHandler
+except:
+    pass # For ubuntu boxes
 from typing import Dict
 
 from .tunirvagrant import vagrant_and_run
@@ -14,7 +17,10 @@ from collections import OrderedDict
 
 
 log = logging.getLogger('tunir')
-log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='tunir'))
+try:
+    log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='tunir'))
+except:
+    pass # pass
 log.setLevel(logging.DEBUG)
 
 

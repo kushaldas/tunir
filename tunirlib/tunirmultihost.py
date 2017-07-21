@@ -258,6 +258,7 @@ def start_multihost(jobname: str, jobpath: str, debug: bool=False, oldconfig: Di
         private_key, public_key = generate_sshkey()
         create_user_data(seed_dir, "passw0rd")
         create_ssh_metadata(seed_dir, public_key, private_key)
+        config.general["keypath"] = os.path.join(seed_dir, "private.pem")
         create_seed_img(meta, seed_dir)
         seed_image = os.path.join(seed_dir, 'seed.img')
 
@@ -328,7 +329,6 @@ def start_multihost(jobname: str, jobpath: str, debug: bool=False, oldconfig: Di
             os.system('cp -r {0} {1}'.format(dir_to_copy, seed_dir))
             ansible_inventory_path = os.path.join(seed_dir, 'tunir_ansible')
             create_ansible_inventory(config.vms, ansible_inventory_path)
-
 
         # This is where we test
         status = run_job(jobpath,job_name=jobname,config=config, ansible_path=seed_dir, extra_config=extra_config)

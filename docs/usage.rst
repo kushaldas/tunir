@@ -157,6 +157,17 @@ successful ssh connection. It polls after every 10 seconds, and timeout is
 currently set for 300 seconds. One should this one instead of *SLEEP* directive
 after a reboot.
 
+HOSTCOMMAND directive
+----------------------
+
+.. versionadded:: 0.18
+
+Now we have *HOSTCOMMAND* directive, which can be used to run any command in the
+host system itself. One major usecase for this directive wil be for generating
+ansible inventory file using a simple script (local). The tests will continue
+even if this command fails to execute properly.
+
+
 
 
 For Multi-VM configurations

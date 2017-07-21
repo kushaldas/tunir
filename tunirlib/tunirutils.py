@@ -164,6 +164,7 @@ def run(host='127.0.0.1', port='22', user='root',
     out.return_code = status
     return out
 
+
 def clean_tmp_dirs(dirs):
     # type: (List[str]) -> None
     "Removes the temporary directories"
@@ -171,8 +172,8 @@ def clean_tmp_dirs(dirs):
         if os.path.exists(path) and path.startswith('/tmp'):
             shutil.rmtree(path)
 
-def system(cmd):
-    # type: (str) -> Tuple[str, str, int]
+
+def system(cmd: str) -> Tuple[str, str, int]:
     """
     Runs a shell command, and returns the output, err, returncode
 
@@ -339,6 +340,10 @@ def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, cont
                     break
                 else:
                     continue # We don't want to execute a POLL command in the remote system
+            if command.startswith("HOSTCOMMAND:"):
+                cmd = command[12:].strip()
+                os.system(cmd)
+                continue
             elif command.startswith('PLAYBOOK'):
                 playbook_name = command.split(' ')[1]
                 playbook = os.path.join(ansible_path, playbook_name)

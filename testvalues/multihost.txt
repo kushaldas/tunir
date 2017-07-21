@@ -1,3 +1,4 @@
 vm1 sudo su -c"echo Hello > /abcd.txt"
+HOSTCOMMAND: touch /tmp/hostcommand.txt
 vm2 ls /
 ## cat /etc/os-release

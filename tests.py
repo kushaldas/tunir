@@ -10,10 +10,8 @@ try:
 except ImportError:
     from io import StringIO
 
-try:
-    from mock import patch, Mock
-except ImportError:
-    from unittest.mock import patch, Mock
+
+from unittest.mock import patch, Mock, call
 
 import tunirlib
 from tunirlib.tunirutils import Result, system
@@ -141,14 +139,17 @@ class TunirTests(unittest.TestCase):
             data = out.getvalue()
         self.assertIn("Passed:1", data)
         self.assertIn("Job status: True", data)
-        self.assertTrue(os.path.exists('./current_run_info.json'))
+        for filename in ['./current_run_info.json', ]:
+            self.assertTrue(os.path.exists(filename), filename)
+        last_call = p_system.call_args_list[-1]
+        self.assertEqual(last_call, call("touch /tmp/hostcommand.txt",))
+
 
 
 class ExecuteTests(unittest.TestCase):
     """
     Tests the execute function.
     """
-
     @patch('tunirlib.tunirutils.run')
     def test_execute(self, t_run):
         config = {"host_string": "127.0.0.1",
@@ -224,3 +225,5 @@ class TestVagrant(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    os.system('rm ./current_run_info.json')
+    os.system('rm /tmp/hostcommand.txt')

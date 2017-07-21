@@ -10,10 +10,8 @@ try:
 except ImportError:
     from io import StringIO
 
-try:
-    from mock import patch, Mock
-except ImportError:
-    from unittest.mock import patch, Mock, call
+
+from unittest.mock import patch, Mock, call
 
 import tunirlib
 from tunirlib.tunirutils import Result, system

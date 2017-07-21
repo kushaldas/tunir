@@ -138,9 +138,10 @@ class TunirTests(unittest.TestCase):
         with captured_output() as (out, err):
             tunirmultihost.start_multihost('multihost', './testvalues/multihost.txt',
                                            debug=False, config_dir='./testvalues/')
-
-            self.assertIn("Passed:1", out.getvalue())
-            self.assertIn("Job status: True", out.getvalue())
+            data = out.getvalue()
+        self.assertIn("Passed:1", data)
+        self.assertIn("Job status: True", data)
+        self.assertTrue(os.path.exists('./current_run_info.json'))
 
 
 class ExecuteTests(unittest.TestCase):

@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import json
 import shutil
 import paramiko
 import socket
@@ -265,6 +266,16 @@ def update_result(result, command, negative):
 
     return True
 
+def write_ip_information(user: str, key: str, config: TunirConfig) -> None:
+    """
+    Writes the vm information to a JSON file
+    """
+    data = {"user": user, "keyfile": key}
+    for key in config.vms:
+        data[key] = config.vms[key]["ip"]
+    with open("./current_run_info.json", "w") as fobj:
+        json.dump(data, fobj)
+
 
 def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, container=None,
             port: str='22', config: TunirConfig = None, ansible_path: str='' ) -> bool:
@@ -303,6 +314,7 @@ def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, cont
         else:
             private_key_path = os.path.join(ansible_path, 'private.pem')
 
+    write_ip_information( config.vms["vm1"]["user"], config.general["keypath"], config)
     with open(jobpath) as fobj:
         commands = fobj.readlines()
 

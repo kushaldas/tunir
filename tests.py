@@ -112,33 +112,40 @@ class TunirTests(unittest.TestCase):
         r2.return_code = 0
         r3 = Result("result3")
         r3.return_code = 0
+        r4 = Result("/usr/bin/ls")
+        r4.return_code = 0
         values = [r1, r2, r3]
         p_run.side_effect = values
 
         c1 = Mock()
         c1.communicate.return_value = ('192.168.1.100', '')
-        c1.return_code = 0
+        c1.returncode = 0
         c2 = Mock()
         c2.communicate.return_value = (
             '? (192.168.122.100) at ABCD [ether] on virbr0\n? (192.168.122.116) at 00:16:3e:33:ba:a2 [ether] on virbr0',
             '')
-        c2.return_code = 0
+        c2.returncode = 0
         c3 = Mock()
         c3.communicate.return_value = ('h', 'h')
-        c3.return_code = 0
+        c3.returncode = 0
         c4 = Mock()
         c4.communicate.return_value = (
             '? (192.168.122.102) at XYZ [ether] on virbr0\n? (192.168.122.116) at 00:16:3e:33:ba:a2 [ether] on virbr0',
             '')
-        c4.return_code = 0
-        p_usystem.side_effect = [c1, c2, c3, c4]
+        c4.returncode = 0
+        c5 = Mock()
+        c5.communicate.return_value = ("/usr/bin/ls", "nothing")
+        c5.returncode = 0
+        p_usystem.side_effect = [c1, c2, c3, c4, c5]
 
         with captured_output() as (out, err):
             tunirmultihost.start_multihost('multihost', './testvalues/multihost.txt',
                                            debug=False, config_dir='./testvalues/')
+
             data = out.getvalue()
         self.assertIn("Passed:1", data)
         self.assertIn("Job status: True", data)
+        self.assertIn("bin/ls", data)
         for filename in ['./current_run_info.json', ]:
             self.assertTrue(os.path.exists(filename), filename)
         last_call = p_system.call_args_list[-1]

@@ -167,7 +167,14 @@ host system itself. One major usecase for this directive wil be for generating
 ansible inventory file using a simple script (local). The tests will continue
 even if this command fails to execute properly.
 
+HOSTTEST directive
+-------------------
 
+.. versionadded:: 0.18
+
+Now we also have the *HOSTTEST* directive, which will allow us to execute a command
+in the host, and count that as a part of the tests. Ansible usage is the best example
+for this directive.
 
 
 For Multi-VM configurations

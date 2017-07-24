@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import time
 import json
 import shutil
@@ -203,8 +204,7 @@ def try_again(func):
 
 
 @try_again
-def execute(config, command, container=None):
-    # type: (Dict[str, str], str, bool) -> Tuple[Result, str]
+def execute(config: Dict[str, str], command: str, container: bool=False) -> Tuple[Result, str]:
     """
     Executes a given command based on the system.
     :param config: Configuration dictionary.
@@ -236,15 +236,15 @@ def execute(config, command, container=None):
 
     return result, negative
 
-def update_result(result, command, negative):
-    # type: (Result, str, str) -> bool
+
+def update_result(result: Result, command: str, negative: str) -> bool:
     """
     Updates the result based on input.
 
     :param result: Output from the command
     :param job: Job object from model.
     :param command: Text command.
-    :param negative: If it is a negative command, which is supposed to fail.
+    :param negative: If it is a negative command, values (yes/no).
 
     :return: Boolean, False if the job as whole is failed.
     """
@@ -259,7 +259,6 @@ def update_result(result, command, negative):
     d = {'command': command, 'result': result.text,
          'ret': str(result.return_code), 'status': status} # type: Dict[str,str]
     STR[command] = d
-
 
     if result.return_code != 0 and negative == 'no':
         # Save the error message and status as fail.
@@ -321,6 +320,8 @@ def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, cont
 
     try:
         for command in commands:
+            hosttest = False
+            cmd = ''
             negative = ''
             result = Result('none') # type: Result
             command = command.strip(' \n')
@@ -344,31 +345,34 @@ def run_job(jobpath: str, job_name: str='', extra_config: Dict[str,str]={}, cont
                 cmd = command[12:].strip()
                 os.system(cmd)
                 continue
-            elif command.startswith('PLAYBOOK'):
-                playbook_name = command.split(' ')[1]
-                playbook = os.path.join(ansible_path, playbook_name)
-                cmd = "ansible-playbook {0} -i {1} --private-key={2} --ssh-extra-args='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'".format(playbook,\
-                            ansible_inventory_path, private_key_path)
-                print(cmd)
-                os.system(cmd)
-                continue
+            elif command.startswith('HOSTTEST:'):
+                cmd = command[10:].strip()
+                hosttest = True
+
 
             print("Executing command: %s" % command)
             shell_command = command
-
-            if re.search('^vm[0-9] ', command):
-                # We have a command for multihost
-                index = command.find(' ')
-                vm_name = command[:index]
-                shell_command = command[index+1:]
-                localconfig = config.vms[vm_name]
-            else: #At this case, all special keywords checked, now it will run on vm1
-                vm_name = 'vm1'
-                shell_command = command
-                localconfig = config.vms[vm_name]
+            if not hosttest:
+                if re.search('^vm[0-9] ', command):
+                    # We have a command for multihost
+                    index = command.find(' ')
+                    vm_name = command[:index]
+                    shell_command = command[index+1:]
+                    localconfig = config.vms[vm_name]
+                else: #At this case, all special keywords checked, now it will run on vm1
+                    vm_name = 'vm1'
+                    shell_command = command
+                    localconfig = config.vms[vm_name]
 
             try:
-                result, negative = execute(localconfig, shell_command)
+                if not hosttest:
+                    result, negative = execute(localconfig, shell_command)
+                else: #  This is only for HOSTTEST directive
+                    out, err, eid = system(cmd)
+                    result = Result(out+err)
+                    result.return_code = eid
+                    negative = "no"
+                # From here we are following the normal flow
                 status = update_result(result, command, negative)
                 if not status:
                     break
